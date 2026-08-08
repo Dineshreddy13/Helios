@@ -14,4 +14,7 @@ export const {
     SMTP_PASS,
     MAIL_FROM,
     OTP_TTL,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL,
 } = process.env;

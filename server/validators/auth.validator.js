@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { VALIDATION_MSG } from "../config/constants.js";
+import { VALIDATION_MSG, AUTH_MSG } from "../config/constants.js";
 
 const usernameSchema = z
   .string()
@@ -33,4 +33,12 @@ export const loginAuthSchema = z.object({
 export const verifyOtpSchema = z.object({
   requestId: requestIdSchema,
   otp: otpSchema,
+});
+
+export const resendOtpSchema = z.object({
+  requestId: requestIdSchema,
+});
+
+export const googleAuthSchema = z.object({
+  code: z.string().min(1, AUTH_MSG.GOOGLE_AUTH_CODE_REQUIRED),
 });

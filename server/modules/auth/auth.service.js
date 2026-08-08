@@ -3,16 +3,21 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { eq, or } from "drizzle-orm";
 import { AUTH_MSG } from "../../config/constants.js";
-import { JWT_EXPIRES_IN, JWT_SECRET, OTP_TTL } from "../../config/env.js";
+import { JWT_EXPIRES_IN, JWT_SECRET, OTP_TTL, GOOGLE_CLIENT_ID } from "../../config/env.js";
+import googleClient from "../../config/google.js";
 import { redis } from "../../config/redis.js";
 import { db } from "../../database/db.js";
 import { users } from "../../models/index.js";
 import { sendEmail } from "../../shared/services/email.service.js";
 import { MAIL_MSG } from "../../config/constants.js";
+
 const COOKIE_NAME = "auth_token";
 const OTP_KEY_PREFIX = "email-verification";
+const OTP_META_KEY_PREFIX = "email-verification-meta";
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_SECONDS = Number(OTP_TTL || 600);
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
+const OTP_RESEND_MAX_COUNT = 3;
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -26,6 +31,7 @@ const authCookieOptions = {
 const normalizeEmail = (email) => email.trim().toLowerCase();
 
 const buildOtpKey = (requestId) => `${OTP_KEY_PREFIX}:${requestId}`;
+const buildOtpMetaKey = (requestId) => `${OTP_META_KEY_PREFIX}:${requestId}`;
 
 const generateOtp = () => randomInt(10 ** (OTP_LENGTH - 1), 10 ** OTP_LENGTH).toString();
 
@@ -93,6 +99,43 @@ const clearOtp = async (requestId) => {
     await redis.del(buildOtpKey(requestId));
 };
 
+const clearOtpMeta = async (requestId) => {
+    await redis.del(buildOtpMetaKey(requestId));
+};
+
+const readOtpMeta = async (requestId) => {
+    const storedValue = await redis.get(buildOtpMetaKey(requestId));
+
+    if (!storedValue) {
+        return {
+            resendCount: 0,
+            lastResentAt: null,
+        };
+    }
+
+    try {
+        const parsedValue = JSON.parse(storedValue);
+        return {
+            resendCount: Number(parsedValue.resendCount || 0),
+            lastResentAt: parsedValue.lastResentAt || null,
+        };
+    } catch {
+        return {
+            resendCount: 0,
+            lastResentAt: null,
+        };
+    }
+};
+
+const storeOtpMeta = async ({ requestId, resendCount, lastResentAt }) => {
+    await redis.set(
+        buildOtpMetaKey(requestId),
+        JSON.stringify({ resendCount, lastResentAt }),
+        "EX",
+        OTP_EXPIRY_SECONDS,
+    );
+};
+
 const sendAndStoreOtp = async (user) => {
     const requestId = randomUUID();
     const otp = generateOtp();
@@ -110,7 +153,7 @@ const sendAndStoreOtp = async (user) => {
             subject: MAIL_MSG.OTP_SUBJECT,
             template: "otpEmail",
             data: {
-                name: user.name,
+                name: user.username,
                 otp,
                 requestId,
                 expiry: "10 minutes",
@@ -118,6 +161,7 @@ const sendAndStoreOtp = async (user) => {
         });
     } catch (error) {
         await clearOtp(requestId);
+        await clearOtpMeta(requestId);
         throw error;
     }
 
@@ -161,6 +205,12 @@ export const register = async ({ username, email, password }) => {
     try {
         const otpPayload = await sendAndStoreOtp(user);
 
+        await storeOtpMeta({
+            requestId: otpPayload.requestId,
+            resendCount: 0,
+            lastResentAt: null,
+        });
+
         return {
             status: 201,
             message: AUTH_MSG.CHECK_EMAIL,
@@ -192,6 +242,7 @@ export const verifyOtp = async ({ requestId, otp }) => {
 
     if (!user) {
         await clearOtp(requestId);
+        await clearOtpMeta(requestId);
         return { status: 404, message: AUTH_MSG.USER_NOT_FOUND };
     }
 
@@ -202,12 +253,91 @@ export const verifyOtp = async ({ requestId, otp }) => {
         .returning();
 
     await clearOtp(requestId);
+    await clearOtpMeta(requestId);
 
     return {
         status: 200,
         message: AUTH_MSG.EMAIL_VERIFICATION_OTP_VERIFIED,
         ...buildAuthResponse(updatedUser),
         user: sanitizeUser(updatedUser),
+    };
+};
+
+export const resendOtp = async ({ requestId }) => {
+    const record = await readOtp(requestId);
+
+    if (!record) {
+        return { status: 400, message: AUTH_MSG.EMAIL_VERIFICATION_REQUEST_INVALID };
+    }
+
+    const meta = await readOtpMeta(requestId);
+    const now = Date.now();
+    const lastResentAt = meta.lastResentAt ? new Date(meta.lastResentAt).getTime() : 0;
+
+    if (lastResentAt && now - lastResentAt < OTP_RESEND_COOLDOWN_SECONDS * 1000) {
+        return { status: 429, message: AUTH_MSG.EMAIL_VERIFICATION_RESEND_TOO_SOON };
+    }
+
+    if (meta.resendCount >= OTP_RESEND_MAX_COUNT) {
+        return { status: 429, message: AUTH_MSG.EMAIL_VERIFICATION_RESEND_LIMIT_REACHED };
+    }
+
+    const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, record.userId))
+        .limit(1);
+
+    if (!user) {
+        await clearOtp(requestId);
+        return { status: 404, message: AUTH_MSG.USER_NOT_FOUND };
+    }
+
+    if (user.provider !== "local") {
+        return { status: 400, message: AUTH_MSG.EMAIL_VERIFICATION_LOCAL_ONLY };
+    }
+
+    if (user.emailVerified) {
+        await clearOtp(requestId);
+        return { status: 200, message: AUTH_MSG.EMAIL_ALREADY_VERIFIED, verified: true };
+    }
+
+    const otp = generateOtp();
+
+    try {
+        await storeOtp({
+            requestId,
+            userId: user.id,
+            email: user.email,
+            otp,
+        });
+
+        await sendEmail({
+            to: user.email,
+            subject: MAIL_MSG.OTP_SUBJECT,
+            template: "otpEmail",
+            data: {
+                name: user.username,
+                otp,
+                requestId,
+                expiry: getOtpExpiryLabel(OTP_EXPIRY_SECONDS),
+            },
+        });
+
+        await storeOtpMeta({
+            requestId,
+            resendCount: meta.resendCount + 1,
+            lastResentAt: new Date().toISOString(),
+        });
+    } catch (error) {
+        return { status: 500, message: AUTH_MSG.EMAIL_VERIFICATION_RESEND_FAILED };
+    }
+
+    return {
+        status: 200,
+        message: AUTH_MSG.EMAIL_VERIFICATION_OTP_RESENT,
+        requestId,
+        expiresInSeconds: OTP_EXPIRY_SECONDS,
     };
 };
 
@@ -263,3 +393,95 @@ export const logout = async () => ({
         maxAge: 0,
     },
 });
+
+export const googleAuth = async ({ code }) => {
+    try {
+        const { tokens } = await googleClient.getToken(code);
+        googleClient.setCredentials(tokens);
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        
+        if (!payload) {
+            return { status: 400, message: AUTH_MSG.GOOGLE_AUTH_FAILED };
+        }
+
+        const { email, email_verified, sub: providerId, picture: avatarUrl } = payload;
+
+        if (!email) {
+            return { status: 400, message: AUTH_MSG.GOOGLE_AUTH_EMAIL_REQUIRED };
+        }
+
+        if (!email_verified) {
+            return { status: 403, message: AUTH_MSG.GOOGLE_AUTH_UNVERIFIED_EMAIL };
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+
+        let [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, normalizedEmail))
+            .limit(1);
+
+        if (user) {
+            if (user.provider === "local") {
+                [user] = await db
+                    .update(users)
+                    .set({ provider: "google", providerId, avatarUrl, emailVerified: true, updatedAt: new Date() })
+                    .where(eq(users.id, user.id))
+                    .returning();
+            }
+            return {
+                status: 200,
+                message: AUTH_MSG.LOGIN_SUCCESS,
+                ...buildAuthResponse(user),
+            };
+        }
+
+        let baseUsername = email.split('@')[0];
+        let normalizedUsername = baseUsername.trim();
+        
+        let usernameExists = true;
+        let counter = 0;
+
+        while (usernameExists) {
+            const [existingUsername] = await db
+                .select({ id: users.id })
+                .from(users)
+                .where(eq(users.username, normalizedUsername))
+                .limit(1);
+
+            if (existingUsername) {
+                counter++;
+                normalizedUsername = `${baseUsername}${randomInt(1000, 9999)}`;
+            } else {
+                usernameExists = false;
+            }
+        }
+
+        [user] = await db
+            .insert(users)
+            .values({
+                username: normalizedUsername,
+                email: normalizedEmail,
+                provider: "google",
+                providerId,
+                avatarUrl,
+                emailVerified: true,
+            })
+            .returning();
+
+        return {
+            status: 200,
+            message: AUTH_MSG.LOGIN_SUCCESS,
+            ...buildAuthResponse(user),
+        };
+    } catch (error) {
+        return { status: 400, message: AUTH_MSG.GOOGLE_AUTH_FAILED };
+    }
+};

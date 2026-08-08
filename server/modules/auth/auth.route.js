@@ -1,8 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { loginUser, logoutUser, getMe, registerUser, verifyOtpCode } from "./auth.controller.js";
+import { loginUser, logoutUser, getMe, registerUser, resendOtpCode, verifyOtpCode, googleAuth } from "./auth.controller.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
-import { loginAuthSchema, registerAuthSchema, verifyOtpSchema } from "../../validators/auth.validator.js";
+import { loginAuthSchema, registerAuthSchema, resendOtpSchema, verifyOtpSchema, googleAuthSchema } from "../../validators/auth.validator.js";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { AUTH_MSG } from "../../config/constants.js";
 
@@ -18,7 +18,9 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, validateRequest(registerAuthSchema), registerUser);
 router.post("/login", authLimiter, validateRequest(loginAuthSchema), loginUser);
+router.post("/google", authLimiter, validateRequest(googleAuthSchema), googleAuth);
 router.post("/verify-otp", authLimiter, validateRequest(verifyOtpSchema), verifyOtpCode);
+router.post("/resend-otp", authLimiter, validateRequest(resendOtpSchema), resendOtpCode);
 router.get("/me", requireAuth, getMe);
 router.post("/logout", requireAuth, logoutUser);
 
