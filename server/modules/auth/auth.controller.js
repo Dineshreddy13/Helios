@@ -1,4 +1,4 @@
-import { getCurrentUser, login, logout, register } from "./auth.service.js";
+import { getCurrentUser, login, logout, register, verifyOtp } from "./auth.service.js";
 
 const sendAuthResponse = (res, payload) => {
   const cookiePayload = { httpOnly: true, path: "/" };
@@ -25,7 +25,12 @@ export const registerUser = async (req, res, next) => {
       return res.status(payload.status).json({ success: false, message: payload.message });
     }
 
-    return sendAuthResponse(res, payload);
+    return res.status(payload.status).json({
+      success: true,
+      message: payload.message,
+      requestId: payload.requestId,
+      expiresInSeconds: payload.expiresInSeconds,
+    });
   } catch (error) {
     next(error);
   }
@@ -61,6 +66,20 @@ export const logoutUser = async (req, res, next) => {
     res.clearCookie(payload.cookieName, payload.cookieOptions);
 
     return res.status(payload.status).json({ success: true, message: payload.message });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyOtpCode = async (req, res, next) => {
+  try {
+    const payload = await verifyOtp(req.validated.body);
+
+    if (payload.status !== 200) {
+      return res.status(payload.status).json({ success: false, message: payload.message });
+    }
+
+    return sendAuthResponse(res, payload);
   } catch (error) {
     next(error);
   }

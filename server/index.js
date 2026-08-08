@@ -5,6 +5,7 @@ import { PORT, CLIENT_URL} from "./config/env.js";
 import { APP_MSG } from "./config/constants.js";
 import { connectDB } from "./database/db.js";
 import authRoute from "./modules/auth/auth.route.js";
+import "./jobs/workers/email.worker.js";
 import logger from "./utils/logger.js";
 const app = express();
 

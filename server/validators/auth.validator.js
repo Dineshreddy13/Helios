@@ -1,18 +1,23 @@
 import { z } from "zod";
+import { VALIDATION_MSG } from "../config/constants.js";
 
 const usernameSchema = z
   .string()
   .trim()
-  .min(3, "Username must be at least 3 characters long.")
-  .max(30, "Username must be at most 30 characters long.")
-  .regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain letters, numbers, dots, underscores, and hyphens.");
+  .min(3, VALIDATION_MSG.USERNAME_MIN)
+  .max(30, VALIDATION_MSG.USERNAME_MAX)
+  .regex(/^[a-zA-Z0-9._-]+$/, VALIDATION_MSG.USERNAME_PATTERN);
 
-const emailSchema = z.string().trim().email("Please provide a valid email address.").transform((value) => value.toLowerCase());
+const emailSchema = z.string().trim().email(VALIDATION_MSG.EMAIL_INVALID).transform((value) => value.toLowerCase());
 
 const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters long.")
-  .max(128, "Password must be at most 128 characters long.");
+  .min(8, VALIDATION_MSG.PASSWORD_MIN)
+  .max(128, VALIDATION_MSG.PASSWORD_MAX);
+
+const requestIdSchema = z.string().uuid(VALIDATION_MSG.REQUEST_ID_INVALID);
+
+const otpSchema = z.string().trim().regex(/^\d{6}$/, VALIDATION_MSG.OTP_INVALID);
 
 export const registerAuthSchema = z.object({
   username: usernameSchema,
@@ -22,5 +27,10 @@ export const registerAuthSchema = z.object({
 
 export const loginAuthSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Password is required."),
+  password: z.string().min(1, VALIDATION_MSG.PASSWORD_REQUIRED),
+});
+
+export const verifyOtpSchema = z.object({
+  requestId: requestIdSchema,
+  otp: otpSchema,
 });
