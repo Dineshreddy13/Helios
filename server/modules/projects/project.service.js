@@ -1,0 +1,102 @@
+﻿import { and, desc, eq } from "drizzle-orm";
+import { PROJECT_MSG } from "../../config/constants.js";
+import { db } from "../../database/db.js";
+import {
+    lists,
+    projectInvitations,
+    projectMembers,
+    projects,
+    tasks,
+} from "../../models/index.js";
+
+// ── createProject ──────────────────────────────────────────────────────────
+export const createProject = async (userId, { name, description }) => {
+    const project = await db.transaction(async (tx) => {
+        const [newProject] = await tx
+            .insert(projects)
+            .values({ name, description: description ?? null, ownerId: userId })
+            .returning();
+
+        await tx.insert(projectMembers).values({
+            projectId: newProject.id,
+            userId,
+            role: "owner",
+        });
+
+        return newProject;
+    });
+
+    return { status: 201, message: PROJECT_MSG.CREATED, project };
+};
+
+// ── getProjectsForUser ─────────────────────────────────────────────────────
+export const getProjectsForUser = async (userId) => {
+    const rows = await db
+        .select({
+            id: projects.id,
+            name: projects.name,
+            description: projects.description,
+            ownerId: projects.ownerId,
+            createdAt: projects.createdAt,
+            updatedAt: projects.updatedAt,
+            role: projectMembers.role,
+        })
+        .from(projects)
+        .innerJoin(projectMembers, eq(projectMembers.projectId, projects.id))
+        .where(eq(projectMembers.userId, userId))
+        .orderBy(desc(projects.updatedAt));
+
+    return { status: 200, projects: rows };
+};
+
+// ── getProjectById ─────────────────────────────────────────────────────────
+export const getProjectById = async (projectId, userId) => {
+    const [project] = await db
+        .select({ id: projects.id, name: projects.name, description: projects.description, ownerId: projects.ownerId, createdAt: projects.createdAt, updatedAt: projects.updatedAt })
+        .from(projects)
+        .where(eq(projects.id, projectId))
+        .limit(1);
+
+    if (!project) {
+        return { status: 404, message: PROJECT_MSG.NOT_FOUND };
+    }
+
+    const [membership] = await db
+        .select({ role: projectMembers.role })
+        .from(projectMembers)
+        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
+        .limit(1);
+
+    if (!membership) {
+        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+    }
+
+    return { status: 200, project: { ...project, role: membership.role } };
+};
+
+// ── deleteProject ──────────────────────────────────────────────────────────
+export const deleteProject = async (projectId, userId) => {
+    const [project] = await db
+        .select({ id: projects.id, ownerId: projects.ownerId })
+        .from(projects)
+        .where(eq(projects.id, projectId))
+        .limit(1);
+
+    if (!project) {
+        return { status: 404, message: PROJECT_MSG.NOT_FOUND };
+    }
+
+    const [membership] = await db
+        .select({ role: projectMembers.role })
+        .from(projectMembers)
+        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
+        .limit(1);
+
+    if (!membership || membership.role !== "owner") {
+        return { status: 403, message: PROJECT_MSG.NOT_OWNER };
+    }
+
+    await db.delete(projects).where(eq(projects.id, projectId));
+
+    return { status: 200, message: PROJECT_MSG.DELETED };
+};

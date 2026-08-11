@@ -46,8 +46,20 @@ export const VALIDATION_MSG = {
     PASSWORD_REQUIRED: "Password is required.",
     REQUEST_ID_INVALID: "Please provide a valid verification request id.",
     OTP_INVALID: "Please provide a valid 6 digit verification code.",
+    PROJECT_NAME_MIN: "Project name must be at least 3 characters long.",
+    PROJECT_NAME_MAX: "Project name must be at most 100 characters long.",
+    PROJECT_DESC_MAX: "Project description must be at most 500 characters long.",
+    AT_LEAST_ONE_FIELD: "At least one field must be provided.",
 }
 
 export const MAIL_MSG = {
     OTP_SUBJECT: "Your Helios verification code",
+}
+
+export const PROJECT_MSG = {
+    CREATED: "Project created successfully.",
+    DELETED: "Project deleted successfully.",
+    NOT_FOUND: "Project not found.",
+    NOT_MEMBER: "You are not a member of this project.",
+    NOT_OWNER: "Only the project owner can perform this action.",
 }
