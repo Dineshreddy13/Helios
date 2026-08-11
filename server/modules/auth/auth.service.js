@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { eq, or } from "drizzle-orm";
 import { AUTH_MSG } from "../../config/constants.js";
-import { JWT_EXPIRES_IN, JWT_SECRET, OTP_TTL, GOOGLE_CLIENT_ID } from "../../config/env.js";
-import googleClient from "../../config/google.js";
+import { JWT_EXPIRES_IN, JWT_SECRET, OTP_TTL } from "../../config/env.js";
 import { redis } from "../../config/redis.js";
 import { db } from "../../database/db.js";
 import { users } from "../../models/index.js";
@@ -354,13 +353,7 @@ export const login = async ({ email, password }) => {
         return { status: 401, message: AUTH_MSG.INVALID_CREDENTIALS };
     }
 
-    if (user.provider !== "local") {
-        return { status: 400, message: AUTH_MSG.GOOGLE_SIGN_IN_ONLY };
-    }
 
-    if (!user.password) {
-        return { status: 400, message: AUTH_MSG.GOOGLE_SIGN_IN_ONLY };
-    }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -393,95 +386,4 @@ export const logout = async () => ({
         maxAge: 0,
     },
 });
-
-export const googleAuth = async ({ code }) => {
-    try {
-        const { tokens } = await googleClient.getToken(code);
-        googleClient.setCredentials(tokens);
-
-        const ticket = await googleClient.verifyIdToken({
-            idToken: tokens.id_token,
-            audience: GOOGLE_CLIENT_ID,
-        });
-
-        const payload = ticket.getPayload();
-        
-        if (!payload) {
-            return { status: 400, message: AUTH_MSG.GOOGLE_AUTH_FAILED };
-        }
-
-        const { email, email_verified, sub: providerId, picture: avatarUrl } = payload;
-
-        if (!email) {
-            return { status: 400, message: AUTH_MSG.GOOGLE_AUTH_EMAIL_REQUIRED };
-        }
-
-        if (!email_verified) {
-            return { status: 403, message: AUTH_MSG.GOOGLE_AUTH_UNVERIFIED_EMAIL };
-        }
-
-        const normalizedEmail = normalizeEmail(email);
-
-        let [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.email, normalizedEmail))
-            .limit(1);
-
-        if (user) {
-            if (user.provider === "local") {
-                [user] = await db
-                    .update(users)
-                    .set({ provider: "google", providerId, avatarUrl, emailVerified: true, updatedAt: new Date() })
-                    .where(eq(users.id, user.id))
-                    .returning();
-            }
-            return {
-                status: 200,
-                message: AUTH_MSG.LOGIN_SUCCESS,
-                ...buildAuthResponse(user),
-            };
-        }
-
-        let baseUsername = email.split('@')[0];
-        let normalizedUsername = baseUsername.trim();
-        
-        let usernameExists = true;
-        let counter = 0;
-
-        while (usernameExists) {
-            const [existingUsername] = await db
-                .select({ id: users.id })
-                .from(users)
-                .where(eq(users.username, normalizedUsername))
-                .limit(1);
-
-            if (existingUsername) {
-                counter++;
-                normalizedUsername = `${baseUsername}${randomInt(1000, 9999)}`;
-            } else {
-                usernameExists = false;
-            }
-        }
-
-        [user] = await db
-            .insert(users)
-            .values({
-                username: normalizedUsername,
-                email: normalizedEmail,
-                provider: "google",
-                providerId,
-                avatarUrl,
-                emailVerified: true,
-            })
-            .returning();
-
-        return {
-            status: 200,
-            message: AUTH_MSG.LOGIN_SUCCESS,
-            ...buildAuthResponse(user),
-        };
-    } catch (error) {
-        return { status: 400, message: AUTH_MSG.GOOGLE_AUTH_FAILED };
-    }
-};
+

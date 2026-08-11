@@ -1,4 +1,4 @@
-import { getCurrentUser, login, logout, register, resendOtp, verifyOtp, googleAuth as googleAuthService } from "./auth.service.js";
+import { getCurrentUser, login, logout, register, resendOtp, verifyOtp } from "./auth.service.js";
 
 const sendAuthResponse = (res, payload) => {
   const cookiePayload = { httpOnly: true, path: "/" };
@@ -104,17 +104,4 @@ export const resendOtpCode = async (req, res, next) => {
     next(error);
   }
 };
-
-export const googleAuth = async (req, res, next) => {
-  try {
-    const payload = await googleAuthService(req.validated.body);
-
-    if (payload.status !== 200) {
-      return res.status(payload.status).json({ success: false, message: payload.message });
-    }
-
-    return sendAuthResponse(res, payload);
-  } catch (error) {
-    next(error);
-  }
-};
+

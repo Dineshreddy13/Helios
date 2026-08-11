@@ -38,7 +38,4 @@ export const verifyOtpSchema = z.object({
 export const resendOtpSchema = z.object({
   requestId: requestIdSchema,
 });
-
-export const googleAuthSchema = z.object({
-  code: z.string().min(1, AUTH_MSG.GOOGLE_AUTH_CODE_REQUIRED),
-});
+

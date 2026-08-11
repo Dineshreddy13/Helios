@@ -19,11 +19,7 @@ export const AUTH_MSG = {
     LOGIN_SUCCESS: "Logged in successfully.",
     LOGOUT_SUCCESS: "Logged out successfully.",
     INVALID_CREDENTIALS: "Invalid email or password.",
-    GOOGLE_SIGN_IN_ONLY: "This account uses Google sign-in. Continue with Google.",
-    GOOGLE_AUTH_CODE_REQUIRED: "Google authorization code is required.",
-    GOOGLE_AUTH_EMAIL_REQUIRED: "Google account email is required.",
-    GOOGLE_AUTH_UNVERIFIED_EMAIL: "Google account email is not verified.",
-    GOOGLE_AUTH_FAILED: "Google authentication failed.",
+
     EMAIL_EXISTS: "An account with this email already exists.",
     USERNAME_TAKEN: "This username is already taken.",
     EMAIL_ALREADY_VERIFIED: "Email is already verified.",
