@@ -1,30 +1,71 @@
-import { useEffect, useState } from "react"
-import axios from "./api/axios"
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import VerifyOtp from './pages/VerifyOtp';
+import PublicRoute from './components/PublicRoute';
+import ProtectedRoute from './components/ProtectedRoute';
+import useAuthStore from './store/authStore';
+import { getMeApi } from './api/auth.api';
 
-const App = () => {
-  const [message, setMessage] = useState("Connecting to backend...")
+const AppRoutes = () => {
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const initAuth = useAuthStore((state) => state.initAuth);
 
   useEffect(() => {
-    const fetchHealth = async () => {
+    const bootstrapSession = async () => {
       try {
-        const response = await axios.get("/api/health")
-        setMessage(response.data.message)
-      } catch (error) {
-        setMessage("Unable to connect to backend.")
+        const data = await getMeApi();
+        initAuth(data.user);
+      } catch {
+        initAuth(null);
       }
-    }
+    };
+    bootstrapSession();
+  }, [initAuth]);
 
-    fetchHealth()
-  }, [])
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <div className="spinner" />
+      </div>
+    );
+  }
 
   return (
-    <main className="app-shell">
-      <section className="status-card">
-        <p className="status-label">Helios</p>
-        <h1>{message}</h1>
-      </section>
-    </main>
-  )
-}
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <Auth />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/verify-otp"
+        element={<VerifyOtp />}
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 
-export default App
+const App = () => {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
+};
+
+export default App;
