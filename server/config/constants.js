@@ -50,6 +50,9 @@ export const VALIDATION_MSG = {
     PROJECT_NAME_MAX: "Project name must be at most 100 characters long.",
     PROJECT_DESC_MAX: "Project description must be at most 500 characters long.",
     AT_LEAST_ONE_FIELD: "At least one field must be provided.",
+    SEARCH_QUERY_MIN: "Search query must be at least 1 character long.",
+    SEARCH_QUERY_MAX: "Search query must be at most 100 characters long.",
+    INVALID_USER_ID: "Please provide a valid user ID.",
 }
 
 export const MAIL_MSG = {
@@ -62,4 +65,14 @@ export const PROJECT_MSG = {
     NOT_FOUND: "Project not found.",
     NOT_MEMBER: "You are not a member of this project.",
     NOT_OWNER: "Only the project owner can perform this action.",
+}
+
+export const INVITATION_MSG = {
+    SENT: "Invitation sent successfully.",
+    ALREADY_MEMBER: "This user is already a member of the project.",
+    ALREADY_INVITED: "This user already has a pending invitation to this project.",
+    NOT_FOUND: "Invitation not found.",
+    ALREADY_RESPONDED: "This invitation has already been responded to.",
+    ACCEPTED: "Invitation accepted.",
+    REJECTED: "Invitation rejected.",
 }

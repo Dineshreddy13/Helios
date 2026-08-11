@@ -3,7 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
+import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ProjectMembers from '../components/ProjectMembers';
 import { Card, CardContent } from '../components/Card';
 
 const Project = () => {
@@ -63,14 +65,13 @@ const Project = () => {
   }
 
   return (
-    <div className="page-container justify-start pt-8">
-      <div className="w-full max-w-7xl">
-        
-        {/* Navigation & Header */}
-        <div className="mb-8">
-          <Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors text-sm flex items-center gap-1 mb-6">
-            &larr; Back to Dashboard
-          </Link>
+    <>
+      <Navbar />
+      <div className="page-container justify-start pt-8 pb-12 min-h-[calc(100vh-65px)]">
+        <div className="w-full max-w-7xl">
+          
+          {/* Navigation & Header */}
+          <div className="mb-8">
           
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
@@ -118,15 +119,9 @@ const Project = () => {
             </Card>
           </div>
 
-          {/* Sidebar Area (Members Placeholder) */}
+          {/* Sidebar Area (Members) */}
           <div className="lg:col-span-1">
-            <h2 className="text-xl font-semibold mb-4">Members</h2>
-            <Card className="min-h-[200px] flex items-center justify-center border-dashed border-gray-800">
-              <CardContent className="text-center text-gray-500">
-                <p>Members section coming soon</p>
-                <p className="text-sm mt-1">Phase 3 implementation</p>
-              </CardContent>
-            </Card>
+            <ProjectMembers projectId={projectId} isOwner={currentProject.role === 'owner'} />
           </div>
 
         </div>
@@ -145,6 +140,7 @@ const Project = () => {
 
       </div>
     </div>
+    </>
   );
 };
 

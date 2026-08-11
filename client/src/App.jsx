@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Project from './pages/Project';
+import CreateProject from './pages/CreateProject';
+import Invitations from './pages/Invitations';
 import VerifyOtp from './pages/VerifyOtp';
 import PublicRoute from './components/PublicRoute';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -56,10 +58,26 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/projects/new"
+        element={
+          <ProtectedRoute>
+            <CreateProject />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/projects/:projectId"
         element={
           <ProtectedRoute>
             <Project />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/invitations"
+        element={
+          <ProtectedRoute>
+            <Invitations />
           </ProtectedRoute>
         }
       />
