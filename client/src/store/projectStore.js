@@ -4,6 +4,7 @@ import {
   deleteProjectApi,
   getProjectByIdApi,
   getProjectsApi,
+  updateProjectReadmeApi,
 } from '../api/project.api';
 
 const useProjectStore = create((set, get) => ({
@@ -68,6 +69,26 @@ const useProjectStore = create((set, get) => ({
     } catch (error) {
       set({ 
         error: error.response?.data?.message || 'Failed to delete project', 
+        isLoading: false 
+      });
+      throw error;
+    }
+  },
+
+  updateProjectReadme: async (projectId, readme) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await updateProjectReadmeApi(projectId, readme);
+      set((state) => ({
+        currentProject: state.currentProject?.id === projectId 
+          ? { ...state.currentProject, readme: response.project.readme } 
+          : state.currentProject,
+        isLoading: false
+      }));
+      return response.project;
+    } catch (error) {
+      set({ 
+        error: error.response?.data?.message || 'Failed to update readme', 
         isLoading: false 
       });
       throw error;

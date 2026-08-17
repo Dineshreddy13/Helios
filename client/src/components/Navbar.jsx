@@ -5,7 +5,8 @@ import useInvitationStore from '../store/invitationStore';
 import { logoutApi } from '../api/auth.api';
 import { Dropdown, DropdownItem } from './Dropdown';
 import ConfirmDialog from './ConfirmDialog';
-import { CirclePlus } from 'lucide-react';
+import CreateProjectModal from './CreateProjectModal';
+import { CirclePlus, UserRoundPlus } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuthStore();
@@ -14,6 +15,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -56,11 +58,36 @@ const Navbar = () => {
               </span>
             )}
           </Link>
+          <Link 
+            to="/discuss" 
+            className={`transition-colors hover:text-white ${isActive('/discuss') ? 'text-white font-medium' : 'text-gray-400'}`}
+          >
+            Discuss
+          </Link>
+          <Link 
+            to="/talk" 
+            className={`transition-colors hover:text-white ${isActive('/talk') ? 'text-white font-medium' : 'text-gray-400'}`}
+          >
+            Talk
+          </Link>
+          <Link 
+            to="/settings" 
+            className={`transition-colors hover:text-white ${isActive('/settings') ? 'text-white font-medium' : 'text-gray-400'}`}
+          >
+            Settings
+          </Link>
         </div>
       </div>
       <div className="flex items-center gap-5">
         <button 
-          onClick={() => navigate('/projects/new')}
+          onClick={() => navigate('/invitations')}
+          className="text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+          title="Invitations"
+        >
+          <UserRoundPlus size={22} strokeWidth={2} />
+        </button>
+        <button 
+          onClick={() => setIsCreateModalOpen(true)}
           className="text-gray-400 hover:text-white transition-colors flex items-center justify-center"
           title="Create Project"
         >
@@ -96,6 +123,11 @@ const Navbar = () => {
         isLoading={isLoggingOut}
         onConfirm={handleLogout}
         onCancel={() => setShowLogoutConfirm(false)}
+      />
+      
+      <CreateProjectModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
       />
     </nav>
   );

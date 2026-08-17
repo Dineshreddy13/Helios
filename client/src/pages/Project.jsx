@@ -1,25 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
 import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ProjectMembers from '../components/ProjectMembers';
-import { Card, CardContent } from '../components/Card';
+import ProjectReadme from '../components/ProjectReadme';
+import Board from '../components/board/Board';
+import useListStore from '../store/listStore';
+import useTaskStore from '../store/taskStore';
 
 const Project = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { currentProject, isLoading, error, fetchProjectById, deleteProject, clearError } = useProjectStore();
+  const { fetchLists, setupSocketListeners, teardownSocketListeners } = useListStore();
+  const { fetchTasks, setupSocketListeners: setupTaskSockets, teardownSocketListeners: teardownTaskSockets } = useTaskStore();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => {
     fetchProjectById(projectId);
-    return () => clearError();
-  }, [projectId, fetchProjectById, clearError]);
+    
+    fetchLists(projectId).then(() => {
+      setupSocketListeners(projectId);
+    });
+
+    fetchTasks(projectId).then(() => {
+      setupTaskSockets(projectId);
+    });
+
+    return () => {
+      clearError();
+      teardownSocketListeners(projectId);
+      teardownTaskSockets(projectId);
+    };
+  }, [projectId, fetchProjectById, clearError, fetchLists, setupSocketListeners, teardownSocketListeners, fetchTasks, setupTaskSockets, teardownTaskSockets]);
 
   const confirmDelete = () => {
     setShowConfirmDelete(true);
@@ -31,7 +49,7 @@ const Project = () => {
       await deleteProject(projectId);
       setShowConfirmDelete(false);
       navigate('/dashboard', { replace: true });
-    } catch (err) {
+    } catch {
       setIsDeleting(false);
       setShowConfirmDelete(false);
     }
@@ -108,15 +126,14 @@ const Project = () => {
         {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
-          {/* Main Content Area (Board Placeholder) */}
-          <div className="lg:col-span-3">
-            <h2 className="text-xl font-semibold mb-4">Board</h2>
-            <Card className="min-h-[400px] flex items-center justify-center border-dashed border-gray-800">
-              <CardContent className="text-center text-gray-500">
-                <p>Board coming soon</p>
-                <p className="text-sm mt-1">Phase 4 implementation</p>
-              </CardContent>
-            </Card>
+          {/* Main Content Area (Board) */}
+          <div className="lg:col-span-3 min-h-[400px]">
+            <Board projectId={projectId} />
+            <ProjectReadme 
+              projectId={projectId} 
+              isOwner={currentProject.role === 'owner'} 
+              initialReadme={currentProject.readme} 
+            />
           </div>
 
           {/* Sidebar Area (Members) */}

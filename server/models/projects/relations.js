@@ -1,10 +1,11 @@
-﻿import { relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { users } from "../auth/user.model.js";
 import { projects } from "./project.model.js";
 import { projectMembers } from "./projectMember.model.js";
 import { projectInvitations } from "./projectInvitation.model.js";
 import { lists } from "./list.model.js";
 import { tasks } from "./task.model.js";
+import { activityLogs } from "./activityLog.model.js";
 
 // ── users ──────────────────────────────────────────────────────────────────
 export const usersRelations = relations(users, ({ many }) => ({
@@ -14,6 +15,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   receivedInvitations: many(projectInvitations, { relationName: "invitation_invitee" }),
   assignedTasks: many(tasks, { relationName: "task_assignee" }),
   createdTasks: many(tasks, { relationName: "task_creator" }),
+  activityLogs: many(activityLogs, { relationName: "activity_actor" }),
 }));
 
 // ── projects ───────────────────────────────────────────────────────────────
@@ -26,6 +28,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   members: many(projectMembers, { relationName: "project_members" }),
   invitations: many(projectInvitations, { relationName: "project_invitations" }),
   lists: many(lists, { relationName: "project_lists" }),
+  activityLogs: many(activityLogs, { relationName: "activity_project" }),
 }));
 
 // ── project_members ────────────────────────────────────────────────────────
@@ -92,5 +95,19 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
     fields: [tasks.createdById],
     references: [users.id],
     relationName: "task_creator",
+  }),
+}));
+
+// ── activity_logs ─────────────────────────────────────────────────────────
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  project: one(projects, {
+    fields: [activityLogs.projectId],
+    references: [projects.id],
+    relationName: "activity_project",
+  }),
+  actor: one(users, {
+    fields: [activityLogs.actorId],
+    references: [users.id],
+    relationName: "activity_actor",
   }),
 }));

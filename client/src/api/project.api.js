@@ -19,3 +19,8 @@ export const deleteProjectApi = async (projectId) => {
   const { data } = await api.delete(`/api/projects/${projectId}`);
   return data;
 };
+
+export const updateProjectReadmeApi = async (projectId, readme) => {
+  const { data } = await api.put(`/api/projects/${projectId}/readme`, { readme });
+  return data;
+};

@@ -7,6 +7,7 @@ import {
     projects,
     users,
 } from "../../models/index.js";
+import { logActivity } from "../activity/activity.service.js";
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
@@ -78,6 +79,15 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
         .innerJoin(invitedUser, eq(projectInvitations.invitedUserId, invitedUser.id))
         .where(eq(projectInvitations.id, invitation.id))
         .limit(1);
+
+    await logActivity({
+        projectId,
+        actorId: inviterId,
+        actionType: "invitation.sent",
+        targetType: "invitation",
+        targetId: invitation.id,
+        metadata: { invitedUserName: row.invitedUser.username },
+    });
 
     return { status: 201, message: INVITATION_MSG.SENT, invitation: row };
 };
@@ -173,6 +183,15 @@ export const respondToInvitation = async (invitationId, userId, response) => {
                 role: "member",
             });
 
+            await logActivity({
+                projectId: invitation.projectId,
+                actorId: userId,
+                actionType: "invitation.accepted",
+                targetType: "invitation",
+                targetId: invitationId,
+                metadata: {},
+            }, tx);
+
             return updatedInvitation;
         });
 
@@ -185,6 +204,15 @@ export const respondToInvitation = async (invitationId, userId, response) => {
         .set({ status: "rejected", updatedAt: new Date() })
         .where(eq(projectInvitations.id, invitationId))
         .returning();
+
+    await logActivity({
+        projectId: invitation.projectId,
+        actorId: userId,
+        actionType: "invitation.rejected",
+        targetType: "invitation",
+        targetId: invitationId,
+        metadata: {},
+    });
 
     return { status: 200, message: INVITATION_MSG.REJECTED, invitation: updated };
 };

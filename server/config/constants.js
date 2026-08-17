@@ -53,6 +53,15 @@ export const VALIDATION_MSG = {
     SEARCH_QUERY_MIN: "Search query must be at least 1 character long.",
     SEARCH_QUERY_MAX: "Search query must be at most 100 characters long.",
     INVALID_USER_ID: "Please provide a valid user ID.",
+    LIST_NAME_MIN: "List name must be at least 1 character long.",
+    LIST_NAME_MAX: "List name must be at most 100 characters long.",
+    INVALID_LIST_IDS: "orderedListIds must be an array of valid UUIDs with at least 1 element.",
+    TASK_TITLE_MIN: "Task title must be at least 1 character long.",
+    TASK_TITLE_MAX: "Task title must be at most 200 characters long.",
+    TASK_DESC_MAX: "Task description must be at most 2000 characters long.",
+    INVALID_ASSIGNEE_ID: "Please provide a valid assignee UUID.",
+    INVALID_TARGET_LIST_ID: "Please provide a valid target list UUID.",
+    INVALID_TARGET_POSITION: "Target position must be a non-negative number.",
 }
 
 export const MAIL_MSG = {
@@ -75,4 +84,23 @@ export const INVITATION_MSG = {
     ALREADY_RESPONDED: "This invitation has already been responded to.",
     ACCEPTED: "Invitation accepted.",
     REJECTED: "Invitation rejected.",
+}
+
+export const LIST_MSG = {
+    CREATED: "List created successfully.",
+    UPDATED: "List updated successfully.",
+    DELETED: "List deleted successfully.",
+    REORDERED: "Lists reordered successfully.",
+    NOT_FOUND: "List not found.",
+    IDS_MISMATCH: "orderedListIds must contain exactly all list IDs for this project.",
+}
+
+export const TASK_MSG = {
+    CREATED: "Task created successfully.",
+    UPDATED: "Task updated successfully.",
+    DELETED: "Task deleted successfully.",
+    MOVED: "Task moved successfully.",
+    NOT_FOUND: "Task not found.",
+    ASSIGNEE_NOT_MEMBER: "Assignee must be a member of this project.",
+    TARGET_LIST_NOT_IN_PROJECT: "Target list does not belong to the same project.",
 }

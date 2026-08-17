@@ -16,6 +16,7 @@ const descriptionSchema = z
 export const createProjectSchema = z.object({
   name: nameSchema,
   description: descriptionSchema,
+  includeReadme: z.boolean().optional(),
 });
 
 export const updateProjectSchema = z
@@ -26,3 +27,7 @@ export const updateProjectSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: VALIDATION_MSG.AT_LEAST_ONE_FIELD,
   });
+
+export const updateProjectReadmeSchema = z.object({
+  readme: z.string(),
+});

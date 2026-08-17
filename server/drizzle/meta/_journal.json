@@ -15,6 +15,20 @@
       "when": 1786464267245,
       "tag": "0001_safe_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786694918147,
+      "tag": "0002_familiar_morgan_stark",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786716148225,
+      "tag": "0003_worried_sabra",
+      "breakpoints": true
     }
   ]
 }

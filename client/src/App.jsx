@@ -3,13 +3,15 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Project from './pages/Project';
-import CreateProject from './pages/CreateProject';
 import Invitations from './pages/Invitations';
 import VerifyOtp from './pages/VerifyOtp';
 import PublicRoute from './components/PublicRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuthStore from './store/authStore';
 import { getMeApi } from './api/auth.api';
+import Discuss from './pages/Discuss';
+import Talk from './pages/Talk';
+import Settings from './pages/Settings';
 
 const AppRoutes = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -58,14 +60,6 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/projects/new"
-        element={
-          <ProtectedRoute>
-            <CreateProject />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/projects/:projectId"
         element={
           <ProtectedRoute>
@@ -78,6 +72,30 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Invitations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/discuss"
+        element={
+          <ProtectedRoute>
+            <Discuss />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/talk"
+        element={
+          <ProtectedRoute>
+            <Talk />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />
