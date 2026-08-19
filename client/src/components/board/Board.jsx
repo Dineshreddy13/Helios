@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -14,11 +14,11 @@ import {
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Maximize, Minimize } from 'lucide-react';
 import useListStore from '../../store/listStore';
 import BoardColumn from './BoardColumn';
-import Button from '../Button';
-import Input from '../Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const Board = ({ projectId }) => {
   const { lists, reorderLists, createList } = useListStore();
@@ -26,11 +26,23 @@ const Board = ({ projectId }) => {
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Close fullscreen on escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // 5px movement required to trigger drag - allows clicking buttons inside
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -68,7 +80,7 @@ const Board = ({ projectId }) => {
       await createList(projectId, newListName.trim());
       setNewListName('');
       setIsAddingList(false);
-    } catch (error) {
+    } catch {
       // Error handled by store
     } finally {
       setIsSubmitting(false);
@@ -78,7 +90,24 @@ const Board = ({ projectId }) => {
   const activeList = activeId ? lists.find(l => l.id === activeId) : null;
 
   return (
-    <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 items-start">
+    <div className={isFullscreen ? "fixed inset-0 z-50 bg-background flex flex-col p-6" : "relative flex flex-col"}>
+      <div className={`flex justify-end mb-4 ${!isFullscreen && "absolute -top-12 right-0 z-10"}`}>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="text-muted-foreground hover:text-foreground bg-background"
+          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Board"}
+        >
+          {isFullscreen ? (
+            <Minimize className="h-4 w-4" />
+          ) : (
+            <Maximize className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+
+      <div className={`flex gap-4 overflow-x-auto pb-4 items-start ${isFullscreen ? "flex-1 overflow-y-hidden" : ""}`} style={{ scrollbarWidth: 'none' }}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -104,26 +133,25 @@ const Board = ({ projectId }) => {
         {!isAddingList ? (
           <button
             onClick={() => setIsAddingList(true)}
-            className="w-full flex items-center gap-2 px-4 py-3 bg-[var(--card-bg)] border border-dashed border-[var(--border-color)] hover:border-gray-500 rounded-md text-gray-400 hover:text-gray-300 transition-colors text-sm font-medium"
+            className="w-full flex items-center gap-2 px-4 py-3 bg-card border border-dashed border-border hover:border-primary/50 hover:bg-muted/50 rounded-2xl text-muted-foreground hover:text-foreground transition-all text-sm font-medium"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Add another list
           </button>
         ) : (
-          <form 
+          <form
             onSubmit={handleAddList}
-            className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-3 flex flex-col gap-3"
+            className="bg-card border border-border rounded-2xl p-3 flex flex-col gap-3 shadow-sm"
           >
             <Input
               autoFocus
               placeholder="Enter list title..."
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              className="text-sm"
               disabled={isSubmitting}
             />
             <div className="flex items-center gap-2">
-              <Button type="submit" className="h-8 text-xs px-4" disabled={isSubmitting}>
+              <Button type="submit" size="sm" disabled={isSubmitting}>
                 {isSubmitting ? 'Adding...' : 'Add list'}
               </Button>
               <button
@@ -132,15 +160,16 @@ const Board = ({ projectId }) => {
                   setIsAddingList(false);
                   setNewListName('');
                 }}
-                className="text-gray-400 hover:text-gray-300 p-1"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
                 disabled={isSubmitting}
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
           </form>
         )}
       </div>
+    </div>
     </div>
   );
 };

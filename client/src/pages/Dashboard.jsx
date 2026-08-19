@@ -2,10 +2,9 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import useActivityStore from '../store/activityStore';
-import Button from '../components/Button';
-import Badge from '../components/Badge';
 import Navbar from '../components/Navbar';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/Card';
+import Badge from '../components/Badge';
+import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '../utils/date';
 
 const Dashboard = () => {
@@ -44,7 +43,7 @@ const Dashboard = () => {
       const rest = activity.message.slice(actorName.length);
       return (
         <>
-          <span className="font-semibold text-white">{actorName}</span>
+          <span className="font-semibold text-foreground">{actorName}</span>
           {rest}
         </>
       );
@@ -55,7 +54,7 @@ const Dashboard = () => {
   return (
     <>
       <Navbar />
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-65px)] bg-[var(--bg-color)]">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-65px)]">
         
         {/* Main Content Area */}
         <div className="flex-1 p-6 lg:p-8 order-1 w-full">
@@ -64,7 +63,7 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-4">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight mb-2">Projects</h1>
-                <p className="text-gray-400">Manage your projects here.</p>
+                <p className="text-muted-foreground">Manage your projects here.</p>
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => navigate('/projects/new')}>New Project</Button>
@@ -72,48 +71,42 @@ const Dashboard = () => {
             </div>
 
             {error && (
-              <div className="alert-error flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                 <span>{error}</span>
-                <button onClick={clearError} className="text-red-400 hover:text-red-300">×</button>
+                <button onClick={clearError} className="hover:opacity-70 ml-4">×</button>
               </div>
             )}
 
             {/* Project List */}
             {isLoading && projects.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">Loading projects...</div>
+              <div className="text-center py-12 text-muted-foreground">Loading projects...</div>
             ) : projects.length === 0 ? (
-              <Card className="text-center py-16 border-dashed border-gray-800">
-                <CardContent>
-                  <h3 className="text-xl font-medium text-white mb-2">No projects yet</h3>
-                  <p className="text-gray-400 mb-6">Create your first project to get started.</p>
-                  <Button onClick={() => navigate('/projects/new')}>Create a Project</Button>
-                </CardContent>
-              </Card>
+              <div className="text-center py-16 border border-dashed border-border rounded-2xl">
+                <h3 className="text-xl font-medium mb-2">No projects yet</h3>
+                <p className="text-muted-foreground mb-6">Create your first project to get started.</p>
+                <Button onClick={() => navigate('/projects/new')}>Create a Project</Button>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {projects.map((project) => (
-                  <Card 
-                    key={project.id} 
-                    className="cursor-pointer hover:border-gray-600 transition-colors flex flex-col group"
+                  <div
+                    key={project.id}
+                    className="group cursor-pointer rounded-2xl border border-border bg-card p-5 flex flex-col gap-3 hover:border-primary/40 hover:shadow-md transition-all"
                     onClick={() => handleProjectClick(project.id)}
                   >
-                    <CardHeader className="mb-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <CardTitle className="text-lg group-hover:text-[var(--primary-color)] transition-colors line-clamp-1">
-                          {project.name}
-                        </CardTitle>
-                        <Badge variant={project.role}>
-                          {project.role}
-                        </Badge>
-                      </div>
-                      <CardDescription className="line-clamp-2 min-h-[2.5rem]">
-                        {project.description || 'No description provided.'}
-                      </CardDescription>
-                    </CardHeader>
-                    <div className="mt-auto pt-4 border-t border-gray-800/50 text-xs text-gray-500">
+                    <div className="flex justify-between items-start gap-2">
+                      <h3 className="text-base font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+                        {project.name}
+                      </h3>
+                      <Badge variant={project.role}>{project.role}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                      {project.description || 'No description provided.'}
+                    </p>
+                    <div className="mt-auto pt-3 border-t border-border/50 text-xs text-muted-foreground">
                       Updated {new Date(project.updatedAt).toLocaleDateString()}
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
@@ -121,26 +114,26 @@ const Dashboard = () => {
         </div>
 
         {/* Activity Feed Sidebar */}
-        <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0 border-t lg:border-t-0 lg:border-l border-gray-800 bg-[#050505] order-2 lg:min-h-[calc(100vh-65px)]">
+        <div className="w-full lg:w-[300px] xl:w-[340px] shrink-0 border-t lg:border-t-0 lg:border-l border-border order-2 lg:min-h-[calc(100vh-65px)]">
           <div className="sticky top-[65px] h-auto lg:h-[calc(100vh-65px)] flex flex-col">
-            <div className="p-5 lg:p-6 pb-2 border-b lg:border-none border-gray-800">
-              <h2 className="text-lg font-bold tracking-tight">Recent Activity</h2>
+            <div className="p-5 lg:p-6 pb-2 border-b border-border">
+              <h2 className="text-base font-semibold tracking-tight">Recent Activity</h2>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 lg:p-4 pt-0 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-2 lg:p-3">
               {isActivityLoading && dashboardActivity.length === 0 ? (
-                <div className="p-6 text-center text-gray-500 text-sm flex justify-center items-center h-24">
-                  <div className="spinner border-t-gray-500 border-2 w-5 h-5 rounded-full animate-spin"></div>
+                <div className="p-6 text-center text-muted-foreground text-sm flex justify-center items-center h-24">
+                  <div className="w-5 h-5 rounded-full border-2 border-border border-t-foreground animate-spin"></div>
                 </div>
               ) : dashboardActivity.length === 0 ? (
-                <div className="p-6 text-center text-gray-500 text-sm">No recent activity</div>
+                <div className="p-6 text-center text-muted-foreground text-sm">No recent activity</div>
               ) : (
-                <div className="divide-y divide-gray-800/50">
+                <div className="divide-y divide-border/50">
                   {dashboardActivity.map((activity) => (
-                    <div key={activity.id} className="p-3 lg:p-4 hover:bg-gray-800/30 transition-colors rounded-md">
-                      <p className="text-sm text-gray-300 leading-snug">
+                    <div key={activity.id} className="p-3 hover:bg-muted/50 transition-colors rounded-xl">
+                      <p className="text-sm text-muted-foreground leading-snug">
                         {renderActivityMessage(activity)}
                       </p>
-                      <div className="flex items-center justify-between mt-2 text-[11px] text-gray-500 font-medium uppercase tracking-wider">
+                      <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider">
                         <span className="truncate max-w-[120px]">{activity.project?.name}</span>
                         <span>{formatRelativeTime(activity.createdAt)}</span>
                       </div>

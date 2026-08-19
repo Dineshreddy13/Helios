@@ -1,7 +1,7 @@
 import api from './axios';
 
-export const createProjectApi = async ({ name, description }) => {
-  const { data } = await api.post('/api/projects', { name, description });
+export const createProjectApi = async ({ name, description, includeReadme }) => {
+  const { data } = await api.post('/api/projects', { name, description, includeReadme });
   return data;
 };
 

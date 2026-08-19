@@ -6,9 +6,18 @@ import useProjectStore from '../store/projectStore';
 import useThemeStore from '../store/themeStore';
 import { logoutApi } from '../api/auth.api';
 import ConfirmDialog from './ConfirmDialog';
-import { CirclePlus, Search } from 'lucide-react';
+import { CirclePlus, Search, Bell, CheckIcon, XIcon } from 'lucide-react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Item, ItemContent, ItemTitle, ItemDescription, ItemActions } from "@/components/ui/item"
 
 import {
   Breadcrumb,
@@ -41,12 +50,15 @@ import { Input } from "@/components/ui/input"
 
 const Navbar = () => {
   const { user, logout } = useAuthStore();
-  const { myInvitations, fetchMyInvitations } = useInvitationStore();
+  const { myInvitations, fetchMyInvitations, respondToInvitation } = useInvitationStore();
   const { projects, currentProject, fetchProjects } = useProjectStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const isProjectView = location.pathname.startsWith('/projects/') && location.pathname !== '/projects/new';
+  const showProjectDetails = currentProject && isProjectView;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [processingId, setProcessingId] = useState(null);
   const setTheme = useThemeStore((state) => state.setTheme);
 
   useEffect(() => {
@@ -64,6 +76,20 @@ const Navbar = () => {
     finally {
       logout();
       navigate('/', { replace: true });
+    }
+  };
+
+  const handleRespond = async (invitationId, response, projectId) => {
+    setProcessingId(invitationId);
+    try {
+      await respondToInvitation(invitationId, response);
+      if (response === 'accepted') {
+        navigate(`/projects/${projectId}`);
+      }
+    } catch (err) {
+      // Error handled by store
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -100,7 +126,7 @@ const Navbar = () => {
                 <BreadcrumbItem>
                   <BreadcrumbLink render={<Link to="/dashboard">{user?.username}</Link>} />
                 </BreadcrumbItem>
-                {currentProject && (
+                {showProjectDetails && (
                   <>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
@@ -138,9 +164,70 @@ const Navbar = () => {
               />
             </div>
             
+            <Drawer swipeDirection="right">
+              <DrawerTrigger asChild>
+                <button 
+                  className="relative text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center size-8"
+                  title="Notifications"
+                >
+                  <Bell size={22} strokeWidth={2} />
+                  {myInvitations.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                      {myInvitations.length}
+                    </span>
+                  )}
+                </button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>Notifications</DrawerTitle>
+                  <DrawerDescription>
+                    You have {myInvitations.length} pending invitations.
+                  </DrawerDescription>
+                </DrawerHeader>
+                <div className="flex flex-col gap-4 p-4 overflow-y-auto max-h-[60vh] max-w-2xl mx-auto w-full">
+                  {myInvitations.map((invitation) => (
+                    <Item key={invitation.id} variant="outline">
+                      <ItemContent>
+                        <ItemTitle>Project Invitation</ItemTitle>
+                        <ItemDescription>
+                          You have been invited to join <strong>{invitation.project.name}</strong> by {invitation.invitedBy.username}.
+                        </ItemDescription>
+                      </ItemContent>
+                      <ItemActions>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          disabled={processingId === invitation.id}
+                          onClick={() => handleRespond(invitation.id, 'accepted', invitation.project.id)}
+                          className="text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                        >
+                          <CheckIcon className="h-5 w-5" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          disabled={processingId === invitation.id}
+                          onClick={() => handleRespond(invitation.id, 'rejected', null)}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                        >
+                          <XIcon className="h-5 w-5" />
+                        </Button>
+                      </ItemActions>
+                    </Item>
+                  ))}
+                  {myInvitations.length === 0 && (
+                    <div className="text-center text-muted-foreground py-8">
+                      No new notifications.
+                    </div>
+                  )}
+                </div>
+              </DrawerContent>
+            </Drawer>
+
             <button 
               onClick={() => navigate('/projects/new')}
-              className="text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              className="text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center size-8"
               title="Create Project"
             >
               <CirclePlus size={22} strokeWidth={2} />
@@ -198,18 +285,10 @@ const Navbar = () => {
         </div>
 
         {/* Bottom Row (Project Specific Links) */}
-        {currentProject && (
+        {showProjectDetails && (
           <div className="px-6 flex items-center gap-6 mt-1">
             <Link to={`/projects/${currentProject.id}`} className={getProjectLinkClass(`/projects/${currentProject.id}`)}>
               Overview
-            </Link>
-            <Link to={`/projects/${currentProject.id}/invitations`} className={getProjectLinkClass(`/projects/${currentProject.id}/invitations`)}>
-              Invitations
-              {myInvitations.length > 0 && (
-                <span className="ml-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                  {myInvitations.length}
-                </span>
-              )}
             </Link>
             <Link to={`/projects/${currentProject.id}/discuss`} className={getProjectLinkClass(`/projects/${currentProject.id}/discuss`)}>
               Discuss

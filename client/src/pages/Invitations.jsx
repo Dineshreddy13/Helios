@@ -47,28 +47,28 @@ const Invitations = () => {
           )}
 
           {isLoading && myInvitations.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">Loading invitations...</div>
+            <div className="text-center py-12 text-muted-foreground">Loading invitations...</div>
           ) : myInvitations.length === 0 ? (
-            <Card className="text-center py-16 border-dashed border-gray-800">
+            <Card className="text-center py-16 border-dashed border-border bg-card">
               <CardContent>
-                <h3 className="text-xl font-medium text-white mb-2">No pending invitations</h3>
-                <p className="text-gray-400">You're all caught up!</p>
+                <h3 className="text-xl font-medium text-foreground mb-2">No pending invitations</h3>
+                <p className="text-muted-foreground">You're all caught up!</p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {myInvitations.map((inv) => (
-                <Card key={inv.id} className="flex flex-col">
+                <Card key={inv.id} className="flex flex-col bg-card border-border">
                   <CardHeader className="mb-4">
-                    <CardTitle className="text-lg">{inv.project.name}</CardTitle>
-                    <CardDescription className="line-clamp-2 min-h-[2.5rem]">
+                    <CardTitle className="text-lg text-foreground">{inv.project.name}</CardTitle>
+                    <CardDescription className="line-clamp-2 min-h-[2.5rem] text-muted-foreground">
                       {inv.project.description || 'No description provided.'}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="mt-auto pt-4 border-t border-gray-800/50">
+                  <CardContent className="mt-auto pt-4 border-t border-border/50">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="text-sm text-gray-400">
-                        Invited by <span className="text-white font-medium">{inv.invitedBy.username}</span>
+                      <div className="text-sm text-muted-foreground">
+                        Invited by <span className="text-foreground font-medium">{inv.invitedBy.username}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button 

@@ -14,12 +14,9 @@ import useTaskStore from '../store/taskStore';
 const Project = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { currentProject, isLoading, error, fetchProjectById, deleteProject, clearError } = useProjectStore();
+  const { currentProject, isLoading, error, fetchProjectById, clearError } = useProjectStore();
   const { fetchLists, setupSocketListeners, teardownSocketListeners } = useListStore();
   const { fetchTasks, setupSocketListeners: setupTaskSockets, teardownSocketListeners: teardownTaskSockets } = useTaskStore();
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => {
     fetchProjectById(projectId);
@@ -39,21 +36,6 @@ const Project = () => {
     };
   }, [projectId, fetchProjectById, clearError, fetchLists, setupSocketListeners, teardownSocketListeners, fetchTasks, setupTaskSockets, teardownTaskSockets]);
 
-  const confirmDelete = () => {
-    setShowConfirmDelete(true);
-  };
-
-  const executeDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await deleteProject(projectId);
-      setShowConfirmDelete(false);
-      navigate('/dashboard', { replace: true });
-    } catch {
-      setIsDeleting(false);
-      setShowConfirmDelete(false);
-    }
-  };
 
   if (isLoading && !currentProject) {
     return (
@@ -99,19 +81,7 @@ const Project = () => {
                     {currentProject.role}
                   </Badge>
                 </div>
-                <p className="text-gray-400 max-w-2xl">{currentProject.description || 'No description provided.'}</p>
               </div>
-
-              {currentProject.role === 'owner' && (
-                <Button
-                  variant="destructive"
-                  className="whitespace-nowrap"
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete Project'}
-                </Button>
-              )}
             </div>
           </div>
 
@@ -124,10 +94,10 @@ const Project = () => {
           )}
 
           {/* Content Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             
             {/* Main Content Area (Board) */}
-            <div className="lg:col-span-3 min-h-[400px]">
+            <div className="lg:col-span-4 min-h-[400px]">
               <Board projectId={projectId} />
               <ProjectReadme 
                 projectId={projectId} 
@@ -136,24 +106,17 @@ const Project = () => {
               />
             </div>
 
-            {/* Sidebar Area (Members) */}
-            <div className="lg:col-span-1">
+            {/* Sidebar Area (Description & Members) */}
+            <div className="lg:col-span-1 flex flex-col gap-8">
+              <div>
+                <h3 className="text-lg font-semibold mb-3">About</h3>
+                <p className="text-gray-400 text-sm">{currentProject.description || 'No description provided.'}</p>
+              </div>
               <ProjectMembers projectId={projectId} isOwner={currentProject.role === 'owner'} />
             </div>
 
           </div>
 
-          <ConfirmDialog
-            isOpen={showConfirmDelete}
-            title="Delete Project"
-            description={`Are you sure you want to delete "${currentProject.name}"? This action cannot be undone and all lists and tasks will be permanently removed.`}
-            confirmText={isDeleting ? 'Deleting...' : 'Delete'}
-            cancelText="Cancel"
-            isDestructive={true}
-            isLoading={isDeleting}
-            onConfirm={executeDelete}
-            onCancel={() => setShowConfirmDelete(false)}
-          />
 
         </div>
       </div>

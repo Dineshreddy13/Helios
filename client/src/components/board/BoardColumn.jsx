@@ -5,10 +5,15 @@ import { EllipsisVertical, Plus, X } from 'lucide-react';
 import useListStore from '../../store/listStore';
 import useTaskStore from '../../store/taskStore';
 import ConfirmDialog from '../ConfirmDialog';
-import { Dropdown, DropdownItem } from '../Dropdown';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import TaskCard from './TaskCard';
-import Button from '../Button';
-import Input from '../Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export const BoardColumnUI = ({
   list,
@@ -89,58 +94,58 @@ export const BoardColumnUI = ({
       <div
         ref={setNodeRef}
         style={style}
-        className={`w-72 shrink-0 flex flex-col bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md ${
+        className={`w-72 shrink-0 flex flex-col bg-card border border-border rounded-2xl shadow-sm ${
           isDragging ? 'opacity-50' : ''
         }`}
       >
-        {/* Header - drag handle area */}
-        <div 
-          className="p-3 border-b border-[var(--border-color)] flex items-center justify-between group cursor-grab active:cursor-grabbing rounded-t-md"
+        {/* Header */}
+        <div
+          className="px-3 py-2.5 border-b border-border flex items-center justify-between group cursor-grab active:cursor-grabbing rounded-t-2xl"
           {...attributes}
           {...listeners}
         >
           {isEditing ? (
             <input
               ref={inputRef}
-              className="bg-[var(--bg-color)] text-[var(--text-color)] text-sm font-semibold px-2 py-1 rounded w-full mr-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="bg-background text-foreground text-sm font-semibold px-2 py-1 rounded-lg w-full mr-2 focus:outline-none focus:ring-2 focus:ring-ring/30 border border-ring"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               onBlur={handleNameSave}
               onKeyDown={handleKeyDown}
-              // Prevent drag when interacting with input
               onPointerDown={(e) => e.stopPropagation()}
             />
           ) : (
-            <h3 className="text-sm font-semibold truncate flex-1 select-none pr-2">
+            <h3 className="text-sm font-semibold truncate flex-1 select-none pr-2 text-foreground">
               {list.name}
             </h3>
           )}
           
           <div className="flex items-center gap-1" onPointerDown={(e) => e.stopPropagation()}>
-            <button 
-              className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[var(--bg-color)] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            <button
+              className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted shrink-0 opacity-0 group-hover:opacity-100 transition-all"
               onClick={() => setIsAddingTask(true)}
               title="Add task"
             >
-              <Plus size={16} />
+              <Plus size={15} />
             </button>
-            <Dropdown 
-              trigger={
-                <button className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[var(--bg-color)] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <EllipsisVertical size={16} />
+            <DropdownMenu>
+              <DropdownMenuTrigger render={
+                <button className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+                  <EllipsisVertical size={15} />
                 </button>
-              }
-            >
-              <DropdownItem onClick={() => setIsEditing(true)}>Rename</DropdownItem>
-              <DropdownItem onClick={() => setShowConfirmDelete(true)} variant="destructive">Delete</DropdownItem>
-            </Dropdown>
+              } />
+              <DropdownMenuContent align="end" className="w-36">
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>Rename</DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => setShowConfirmDelete(true)}>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Content area (Phase 5 tasks) */}
-        <div className="p-3 flex-1 min-h-[100px] flex flex-col gap-2 bg-[var(--bg-color)] rounded-b-md overflow-y-auto overflow-x-hidden">
-          {tasks.length === 0 ? (
-            <div className="text-center text-xs text-gray-500 py-4 italic">
+        {/* Task list */}
+        <div className="p-2 flex-1 min-h-[80px] flex flex-col gap-2 overflow-y-auto overflow-x-hidden">
+          {tasks.length === 0 && !isAddingTask ? (
+            <div className="text-center text-xs text-muted-foreground py-4 italic">
               No tasks yet
             </div>
           ) : (
@@ -149,39 +154,49 @@ export const BoardColumnUI = ({
 
           {/* Add Task Form */}
           {isAddingTask && (
-            <div className="mt-2">
-              <form 
-                onSubmit={handleAddTask}
-                className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-md p-2 flex flex-col gap-2"
-              >
-                <Input
-                  autoFocus
-                  placeholder="Task title..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="text-sm"
+            <form
+              onSubmit={handleAddTask}
+              className="bg-background border border-border rounded-xl p-2 flex flex-col gap-2 mt-1"
+            >
+              <Input
+                autoFocus
+                placeholder="Task title..."
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                disabled={isSubmittingTask}
+              />
+              <div className="flex items-center gap-2">
+                <Button type="submit" size="sm" disabled={isSubmittingTask}>
+                  {isSubmittingTask ? 'Adding...' : 'Add task'}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingTask(false);
+                    setNewTaskTitle('');
+                  }}
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
                   disabled={isSubmittingTask}
-                />
-                <div className="flex items-center gap-2">
-                  <Button type="submit" className="h-7 text-xs px-3" disabled={isSubmittingTask}>
-                    {isSubmittingTask ? 'Adding...' : 'Add task'}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingTask(false);
-                      setNewTaskTitle('');
-                    }}
-                    className="text-gray-400 hover:text-gray-300 p-1"
-                    disabled={isSubmittingTask}
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              </form>
-            </div>
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            </form>
           )}
         </div>
+
+        {/* Footer: Add task button */}
+        {!isAddingTask && (
+          <div className="px-2 pb-2">
+            <button
+              onClick={() => setIsAddingTask(true)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-medium transition-colors"
+            >
+              <Plus size={14} />
+              Add a task
+            </button>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

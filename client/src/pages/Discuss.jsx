@@ -5,10 +5,10 @@ const Discuss = () => {
   return (
     <>
       <Navbar />
-      <div className="page-container justify-start pt-8 pb-12 min-h-[calc(100vh-65px)]">
+      <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
         <div className="w-full max-w-7xl">
           <h1 className="text-3xl font-bold tracking-tight mb-4">Discuss</h1>
-          <p className="text-gray-400">Welcome to the Discuss page. This is a placeholder for future discussions.</p>
+          <p className="text-muted-foreground">Welcome to the Discuss page. This is a placeholder for future discussions.</p>
         </div>
       </div>
     </>

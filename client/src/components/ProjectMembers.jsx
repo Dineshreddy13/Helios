@@ -148,23 +148,26 @@ const ProjectMembers = ({ projectId, isOwner }) => {
       <div>
         <h3 className="text-lg font-semibold mb-3">Members ({projectMembers.length})</h3>
         {isLoading && projectMembers.length === 0 ? (
-          <div className="text-sm text-gray-500">Loading members...</div>
+          <div className="text-sm text-muted-foreground">Loading members...</div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {projectMembers.map(member => (
-              <div key={member.id} className="flex items-center justify-between p-3 border border-[var(--border-color)] rounded-md bg-[var(--card-bg)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-sm font-medium uppercase border border-gray-700 text-gray-300">
-                    {member.user.username.charAt(0)}
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-5 gap-3">
+              {projectMembers.slice(0, 10).map(member => (
+                <div key={member.id} className="flex flex-col items-center gap-1" title={`${member.user.username} (${member.role})`}>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold uppercase text-primary border border-primary/20">
+                    {member.user.username.substring(0, 2)}
                   </div>
-                  <div>
-                    <div className="font-medium text-sm text-white">{member.user.username}</div>
-                    <div className="text-xs text-gray-400">{member.user.email}</div>
-                  </div>
+                  <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                    {member.user.username}
+                  </span>
                 </div>
-                <Badge variant={member.role}>{member.role}</Badge>
-              </div>
-            ))}
+              ))}
+            </div>
+            {projectMembers.length > 10 && (
+              <button className="text-sm text-muted-foreground hover:text-foreground text-left transition-colors pt-1">
+                +{projectMembers.length - 10} more members
+              </button>
+            )}
           </div>
         )}
       </div>

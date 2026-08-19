@@ -14,6 +14,7 @@ import { getMeApi } from './api/auth.api';
 import Discuss from './pages/Discuss';
 import Talk from './pages/Talk';
 import Settings from './pages/Settings';
+import CreateProject from './pages/CreateProject';
 
 const AppRoutes = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -92,6 +93,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/projects/new"
+        element={
+          <ProtectedRoute>
+            <CreateProject />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/projects/:projectId"
         element={
           <ProtectedRoute>
@@ -99,16 +108,9 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
-        path="/invitations"
-        element={
-          <ProtectedRoute>
-            <Invitations />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/discuss"
+        path="/projects/:projectId/discuss"
         element={
           <ProtectedRoute>
             <Discuss />
@@ -116,7 +118,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/talk"
+        path="/projects/:projectId/talk"
         element={
           <ProtectedRoute>
             <Talk />
@@ -124,7 +126,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/settings"
+        path="/projects/:projectId/settings"
         element={
           <ProtectedRoute>
             <Settings />

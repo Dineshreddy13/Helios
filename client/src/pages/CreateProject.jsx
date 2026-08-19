@@ -17,7 +17,7 @@ const CreateProject = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: { name: '', description: '' }
+    defaultValues: { name: '', description: '', initializeReadme: false }
   });
 
   useEffect(() => {
@@ -26,7 +26,8 @@ const CreateProject = () => {
 
   const onSubmit = async (data) => {
     try {
-      const newProject = await createProject(data);
+      const { initializeReadme, ...rest } = data;
+      const newProject = await createProject({ ...rest, includeReadme: !!initializeReadme });
       navigate(`/projects/${newProject.id}`);
     } catch (err) {
       // Error is handled by the store and displayed below
