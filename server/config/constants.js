@@ -62,6 +62,10 @@ export const VALIDATION_MSG = {
     INVALID_ASSIGNEE_ID: "Please provide a valid assignee UUID.",
     INVALID_TARGET_LIST_ID: "Please provide a valid target list UUID.",
     INVALID_TARGET_POSITION: "Target position must be a non-negative number.",
+    TASK_STATUS_INVALID: "Status must be either 'pending' or 'completed'.",
+    TASK_TAGS_MAX: "A task can have at most 10 tags.",
+    TASK_TAG_MAX_LENGTH: "Each tag must be at most 50 characters long.",
+    TASK_DUE_DATE_INVALID: "Due date must be a valid ISO date-time string.",
 }
 
 export const MAIL_MSG = {
@@ -103,4 +107,8 @@ export const TASK_MSG = {
     NOT_FOUND: "Task not found.",
     ASSIGNEE_NOT_MEMBER: "Assignee must be a member of this project.",
     TARGET_LIST_NOT_IN_PROJECT: "Target list does not belong to the same project.",
+    FILE_UPLOADED: "File(s) uploaded successfully.",
+    FILE_DELETED: "File deleted successfully.",
+    FILE_NOT_FOUND: "File not found on this task.",
+    FILE_LIMIT_EXCEEDED: "A task can have at most 5 files.",
 }

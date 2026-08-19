@@ -1,9 +1,11 @@
 import {
     createTask,
     deleteTask,
+    deleteTaskFile,
     getTasksForProject,
     moveTask,
     updateTask,
+    uploadTaskFiles,
 } from "./task.service.js";
 import { getIO } from "../../sockets/index.js";
 
@@ -112,6 +114,54 @@ export const moveTaskHandler = async (req, res, next) => {
             task: payload.task,
             sourceListId: payload.sourceListId,
             targetListId: payload.targetListId,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const uploadTaskFilesHandler = async (req, res, next) => {
+    try {
+        const { taskId } = req.params;
+        const files = req.files ?? [];
+
+        if (files.length === 0) {
+            return res.status(400).json({ success: false, message: "No files were uploaded." });
+        }
+
+        const payload = await uploadTaskFiles(taskId, req.user.id, files);
+
+        if (payload.status !== 200) {
+            return res.status(payload.status).json({ success: false, message: payload.message });
+        }
+
+        getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
+
+        return res.status(payload.status).json({
+            success: true,
+            message: payload.message,
+            task: payload.task,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteTaskFileHandler = async (req, res, next) => {
+    try {
+        const { taskId, fileId } = req.params;
+        const payload = await deleteTaskFile(taskId, req.user.id, fileId);
+
+        if (payload.status !== 200) {
+            return res.status(payload.status).json({ success: false, message: payload.message });
+        }
+
+        getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
+
+        return res.status(payload.status).json({
+            success: true,
+            message: payload.message,
+            task: payload.task,
         });
     } catch (error) {
         next(error);

@@ -1,4 +1,4 @@
-﻿import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
 import { lists } from "./list.model.js";
 import { projects } from "./project.model.js";
@@ -13,6 +13,10 @@ export const tasks = pgTable("tasks", {
     .references(() => projects.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
+  status: text("status").$type().notNull().default("pending"),
+  tags: text("tags").array(),
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  files: jsonb("files").$type(),
   position: integer("position").notNull(),
   assigneeId: uuid("assignee_id").references(() => users.id, {
     onDelete: "set null",

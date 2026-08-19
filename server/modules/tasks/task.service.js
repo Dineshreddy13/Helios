@@ -4,6 +4,13 @@ import { LIST_MSG, PROJECT_MSG, TASK_MSG } from "../../config/constants.js";
 import { db } from "../../database/db.js";
 import { lists, projectMembers, tasks, users } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -26,6 +33,10 @@ const buildTaskSelect = () => ({
     projectId: tasks.projectId,
     title: tasks.title,
     description: tasks.description,
+    status: tasks.status,
+    tags: tasks.tags,
+    dueDate: tasks.dueDate,
+    files: tasks.files,
     position: tasks.position,
     createdById: tasks.createdById,
     createdAt: tasks.createdAt,
@@ -57,7 +68,7 @@ const reindexList = async (tx, listId) => {
 };
 
 // ── createTask ─────────────────────────────────────────────────────────────
-export const createTask = async (listId, userId, { title, description, assigneeId }) => {
+export const createTask = async (listId, userId, { title, description, assigneeId, status, tags, dueDate }) => {
     // 1. fetch the list to get projectId
     const [list] = await db
         .select()
@@ -99,6 +110,10 @@ export const createTask = async (listId, userId, { title, description, assigneeI
             projectId: list.projectId,
             title,
             description,
+            status: status ?? "pending",
+            tags: tags ?? null,
+            dueDate: dueDate ? new Date(dueDate) : null,
+            files: null,
             position,
             assigneeId: assigneeId ?? null,
             createdById: userId,
@@ -143,7 +158,7 @@ export const getTasksForProject = async (projectId, userId) => {
 };
 
 // ── updateTask ─────────────────────────────────────────────────────────────
-export const updateTask = async (taskId, userId, { title, description, assigneeId }) => {
+export const updateTask = async (taskId, userId, { title, description, assigneeId, status, tags, dueDate }) => {
     // 1. fetch task
     const [existing] = await db
         .select()
@@ -174,6 +189,9 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     if (title !== undefined) patch.title = title;
     if (description !== undefined) patch.description = description;
     if (assigneeId !== undefined) patch.assigneeId = assigneeId; // allows null to unassign
+    if (status !== undefined) patch.status = status;
+    if (tags !== undefined) patch.tags = tags;
+    if (dueDate !== undefined) patch.dueDate = dueDate !== null ? new Date(dueDate) : null;
 
     await db.update(tasks).set(patch).where(eq(tasks.id, taskId));
 
@@ -190,6 +208,9 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     if (title !== undefined && title !== existing.title) changedFields.push("title");
     if (description !== undefined && description !== existing.description) changedFields.push("description");
     if (assigneeId !== undefined && assigneeId !== existing.assigneeId) changedFields.push("assignee");
+    if (status !== undefined && status !== existing.status) changedFields.push("status");
+    if (tags !== undefined) changedFields.push("tags");
+    if (dueDate !== undefined) changedFields.push("dueDate");
 
     await logActivity({
         projectId: existing.projectId,
@@ -218,6 +239,16 @@ export const deleteTask = async (taskId, userId) => {
     const membership = await getMembership(existing.projectId, userId);
     if (!membership) {
         return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+    }
+
+    // Delete physical files from disk
+    if (existing.files && Array.isArray(existing.files)) {
+        for (const file of existing.files) {
+            const filePath = path.join(__dirname, "..", "..", "uploads", "tasks", path.basename(file.url));
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
     }
 
     await db.delete(tasks).where(eq(tasks.id, taskId));
@@ -395,4 +426,103 @@ export const moveTask = async (taskId, userId, { targetListId, targetPosition })
         sourceListId,
         targetListId,
     };
+};
+
+// ── uploadTaskFiles ────────────────────────────────────────────────────────
+export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
+    const [existing] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, taskId))
+        .limit(1);
+
+    if (!existing) {
+        return { status: 404, message: TASK_MSG.NOT_FOUND };
+    }
+
+    const membership = await getMembership(existing.projectId, userId);
+    if (!membership) {
+        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+    }
+
+    const currentFiles = Array.isArray(existing.files) ? existing.files : [];
+
+    if (currentFiles.length + uploadedFiles.length > 5) {
+        // Clean up the newly uploaded files since we're rejecting
+        for (const f of uploadedFiles) {
+            if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
+        }
+        return { status: 400, message: TASK_MSG.FILE_LIMIT_EXCEEDED };
+    }
+
+    const newFileEntries = uploadedFiles.map((f) => ({
+        id: uuidv4(),
+        name: f.originalname,
+        url: `/uploads/tasks/${f.filename}`,
+        size: f.size,
+        mimeType: f.mimetype,
+    }));
+
+    const mergedFiles = [...currentFiles, ...newFileEntries];
+
+    await db
+        .update(tasks)
+        .set({ files: mergedFiles, updatedAt: new Date() })
+        .where(eq(tasks.id, taskId));
+
+    const [task] = await db
+        .select(buildTaskSelect())
+        .from(tasks)
+        .leftJoin(assignee, eq(tasks.assigneeId, assignee.id))
+        .where(eq(tasks.id, taskId))
+        .limit(1);
+
+    return { status: 200, message: TASK_MSG.FILE_UPLOADED, task };
+};
+
+// ── deleteTaskFile ─────────────────────────────────────────────────────────
+export const deleteTaskFile = async (taskId, userId, fileId) => {
+    const [existing] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.id, taskId))
+        .limit(1);
+
+    if (!existing) {
+        return { status: 404, message: TASK_MSG.NOT_FOUND };
+    }
+
+    const membership = await getMembership(existing.projectId, userId);
+    if (!membership) {
+        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+    }
+
+    const currentFiles = Array.isArray(existing.files) ? existing.files : [];
+    const fileToDelete = currentFiles.find((f) => f.id === fileId);
+
+    if (!fileToDelete) {
+        return { status: 404, message: TASK_MSG.FILE_NOT_FOUND };
+    }
+
+    // Delete from disk
+    const diskPath = path.join(__dirname, "..", "..", "uploads", "tasks", path.basename(fileToDelete.url));
+    if (fs.existsSync(diskPath)) {
+        fs.unlinkSync(diskPath);
+    }
+
+    const updatedFiles = currentFiles.filter((f) => f.id !== fileId);
+
+    await db
+        .update(tasks)
+        .set({ files: updatedFiles.length > 0 ? updatedFiles : null, updatedAt: new Date() })
+        .where(eq(tasks.id, taskId));
+
+    const [task] = await db
+        .select(buildTaskSelect())
+        .from(tasks)
+        .leftJoin(assignee, eq(tasks.assigneeId, assignee.id))
+        .where(eq(tasks.id, taskId))
+        .limit(1);
+
+    return { status: 200, message: TASK_MSG.FILE_DELETED, task };
 };
