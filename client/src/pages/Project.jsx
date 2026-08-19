@@ -6,14 +6,10 @@ import Badge from '../components/Badge';
 import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ProjectMembers from '../components/ProjectMembers';
-<<<<<<< HEAD
 import ProjectReadme from '../components/ProjectReadme';
 import Board from '../components/board/Board';
 import useListStore from '../store/listStore';
 import useTaskStore from '../store/taskStore';
-=======
-import { Card, CardContent } from '@/components/ui/card';
->>>>>>> 41ce5c5 (feat: scaffold client application with authentication pages and reusable UI components)
 
 const Project = () => {
   const { projectId } = useParams();
@@ -117,42 +113,6 @@ const Project = () => {
                 </Button>
               )}
             </div>
-<<<<<<< HEAD
-            
-            {currentProject.role === 'owner' && (
-              <Button 
-                variant="destructive" 
-                className="whitespace-nowrap"
-                onClick={confirmDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Project'}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Global Error Display for actions on this page */}
-        {error && (
-          <div className="alert-error flex justify-between items-center mb-8">
-            <span>{error}</span>
-            <button onClick={clearError} className="text-red-400 hover:text-red-300">×</button>
-          </div>
-        )}
-
-        {/* Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* Main Content Area (Board) */}
-          <div className="lg:col-span-3 min-h-[400px]">
-            <Board projectId={projectId} />
-            <ProjectReadme 
-              projectId={projectId} 
-              isOwner={currentProject.role === 'owner'} 
-              initialReadme={currentProject.readme} 
-            />
-=======
->>>>>>> 41ce5c5 (feat: scaffold client application with authentication pages and reusable UI components)
           </div>
 
           {/* Global Error Display for actions on this page */}
@@ -165,16 +125,15 @@ const Project = () => {
 
           {/* Content Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-            {/* Main Content Area (Board Placeholder) */}
-            <div className="lg:col-span-3">
-              <h2 className="text-xl font-semibold mb-4">Board</h2>
-              <Card className="min-h-[400px] flex items-center justify-center border-dashed border-gray-800">
-                <CardContent className="text-center text-gray-500">
-                  <p>Board coming soon</p>
-                  <p className="text-sm mt-1">Phase 4 implementation</p>
-                </CardContent>
-              </Card>
+            
+            {/* Main Content Area (Board) */}
+            <div className="lg:col-span-3 min-h-[400px]">
+              <Board projectId={projectId} />
+              <ProjectReadme 
+                projectId={projectId} 
+                isOwner={currentProject.role === 'owner'} 
+                initialReadme={currentProject.readme} 
+              />
             </div>
 
             {/* Sidebar Area (Members) */}
