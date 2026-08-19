@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
+<<<<<<< HEAD
 import useActivityStore from '../store/activityStore';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
 import Navbar from '../components/Navbar';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/Card';
 import { formatRelativeTime } from '../utils/date';
+=======
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import Navbar from '../components/Navbar';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
+>>>>>>> 41ce5c5 (feat: scaffold client application with authentication pages and reusable UI components)
 
 const Dashboard = () => {
   const { projects, isLoading, error, fetchProjects, clearError } = useProjectStore();
@@ -38,6 +47,7 @@ const Dashboard = () => {
     navigate(`/projects/${projectId}`);
   };
 
+<<<<<<< HEAD
   const renderActivityMessage = (activity) => {
     const actorName = activity.actor?.username || activity.metadata?.actorName || 'Someone';
     if (activity.message.startsWith(actorName)) {
@@ -50,11 +60,20 @@ const Dashboard = () => {
       );
     }
     return activity.message;
+=======
+  const getRoleBadgeVariant = (role) => {
+    switch (role) {
+      case 'owner': return 'default';
+      case 'admin': return 'secondary';
+      default: return 'outline';
+    }
+>>>>>>> 41ce5c5 (feat: scaffold client application with authentication pages and reusable UI components)
   };
 
   return (
     <>
       <Navbar />
+<<<<<<< HEAD
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-65px)] bg-[var(--bg-color)]">
         
         {/* Main Content Area */}
@@ -69,8 +88,19 @@ const Dashboard = () => {
               <div className="flex gap-3">
                 <Button onClick={() => navigate('/projects/new')}>New Project</Button>
               </div>
+=======
+      <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
+        <div className="w-full max-w-7xl">
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">Projects</h1>
+              <p className="text-muted-foreground">Manage your projects here.</p>
+>>>>>>> 41ce5c5 (feat: scaffold client application with authentication pages and reusable UI components)
             </div>
 
+<<<<<<< HEAD
             {error && (
               <div className="alert-error flex justify-between items-center mb-6">
                 <span>{error}</span>
@@ -151,7 +181,59 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+=======
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex justify-between items-center w-full ml-2">
+                <span>{error}</span>
+                <button onClick={clearError} className="hover:opacity-70 text-lg leading-none">×</button>
+              </AlertDescription>
+            </Alert>
+          )}
 
+          {/* Project List */}
+          {isLoading && projects.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">Loading projects...</div>
+          ) : projects.length === 0 ? (
+            <Card className="text-center py-16 border-dashed border-border bg-muted/30 shadow-none">
+              <CardContent className="pt-6">
+                <h3 className="text-xl font-medium text-foreground mb-2">No projects yet</h3>
+                <p className="text-muted-foreground mb-6">Create your first project to get started.</p>
+                <Button onClick={() => navigate('/projects/new')}>Create a Project</Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((project) => (
+                <Card
+                  key={project.id}
+                  className="cursor-pointer hover:border-primary/50 transition-colors flex flex-col group shadow-sm hover:shadow-md"
+                  onClick={() => handleProjectClick(project.id)}
+                >
+                  <CardHeader className="mb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-1">
+                        {project.name}
+                      </CardTitle>
+                      <Badge variant={getRoleBadgeVariant(project.role)} className="capitalize">
+                        {project.role}
+                      </Badge>
+                    </div>
+                    <CardDescription className="line-clamp-2 min-h-[2.5rem]">
+                      {project.description || 'No description provided.'}
+                    </CardDescription>
+                  </CardHeader>
+                  <div className="mt-auto pt-4 border-t border-border px-6 pb-4 text-xs text-muted-foreground">
+                    Updated {new Date(project.updatedAt).toLocaleDateString()}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+>>>>>>> 41ce5c5 (feat: scaffold client application with authentication pages and reusable UI components)
+
+        </div>
       </div>
     </>
   );

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import useInvitationStore from '../store/invitationStore';
 import { searchUsersApi } from '../api/user.api';
-import Input from './Input';
-import Button from './Button';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import Badge from './Badge';
 
 const ProjectMembers = ({ projectId, isOwner }) => {

@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import useAuthStore from '../store/authStore';
-import { verifyOtpApi, resendOtpApi, getMeApi } from '../api/auth.api';
-import Button from '../components/Button';
-import Input from '../components/Input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/Card';
+import { useForm, Controller } from 'react-hook-form';
+import useAuthStore from '@/store/authStore';
+import { verifyOtpApi, resendOtpApi, getMeApi } from '@/api/auth.api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import Auth from './Auth';
 
 const RESEND_COOLDOWN = 60;
 
@@ -25,7 +37,7 @@ const VerifyOtp = () => {
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef(null);
 
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, control, formState: { errors } } = useForm();
 
   // Redirect if already authenticated or landed without a requestId
   useEffect(() => {
@@ -97,68 +109,90 @@ const VerifyOtp = () => {
   };
 
   return (
-    <div className="page-container">
-      <div className="w-full max-w-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Check your email</CardTitle>
-            <CardDescription>
+    <Auth>
+      <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
+        <FieldGroup>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h1 className="text-2xl font-bold">Check your email</h1>
+            <p className="text-sm text-balance text-muted-foreground">
               We sent a 6-digit verification code to your email.
               {expiresInSeconds && (
                 <> It expires in {Math.round(expiresInSeconds / 60)} minutes.</>
               )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {apiError && (
-              <div className="alert-error">
-                {apiError}
-              </div>
-            )}
-            {resendMsg && (
-              <div className="alert-success">
-                {resendMsg}
-              </div>
-            )}
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Input
-                id="otp"
-                type="text"
-                label="Verification Code"
-                placeholder="123456"
-                maxLength={6}
-                className="code-text tracking-widest text-center text-lg"
-                {...register('otp', {
+            </p>
+          </div>
+
+          {apiError && (
+            <div className="text-sm font-medium text-destructive text-center p-2 bg-destructive/10 rounded-md">
+              {apiError}
+            </div>
+          )}
+          {resendMsg && (
+            <div className="text-sm font-medium text-green-600 text-center p-2 bg-green-100 rounded-md">
+              {resendMsg}
+            </div>
+          )}
+
+          <Field>
+            <FieldLabel htmlFor="otp">Verification Code</FieldLabel>
+            <div className="flex justify-center my-4">
+              <Controller
+                name="otp"
+                control={control}
+                rules={{
                   required: 'Verification code is required',
-                  pattern: { value: /^\d{6}$/, message: 'Must be a 6-digit number' },
-                })}
-                error={errors.otp?.message}
+                  pattern: { value: /^\d{6}$/, message: 'Must be a 6-digit number' }
+                }}
+                render={({ field }) => (
+                  <InputOTP maxLength={6} {...field}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                )}
               />
-              <Button type="submit" className="w-full mt-2" disabled={isSubmitting}>
-                {isSubmitting ? 'Verifying...' : 'Verify Email'}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-center border-t border-[var(--border-color)]">
-            <p className="text-sm text-[var(--muted-color)]">
+            </div>
+            {errors.otp && (
+              <p className="text-sm text-destructive">{errors.otp.message}</p>
+            )}
+          </Field>
+
+          <Field>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Verifying...' : 'Verify Email'}
+            </Button>
+          </Field>
+
+          <Field>
+            <FieldDescription className="text-center">
               Didn&apos;t receive a code?{' '}
               {cooldown > 0 ? (
-                <span className="code-text text-[var(--muted-color)]">Resend in {cooldown}s</span>
+                <span className="text-muted-foreground">Resend in {cooldown}s</span>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isResending}
-                  className="text-[var(--text-color)] hover:underline outline-none disabled:opacity-50"
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleResend();
+                  }}
+                  className="underline underline-offset-4"
                 >
                   {isResending ? 'Sending...' : 'Resend code'}
-                </button>
+                </a>
               )}
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+            </FieldDescription>
+          </Field>
+        </FieldGroup>
+      </form>
+    </Auth>
   );
 };
 

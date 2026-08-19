@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useInvitationStore from '../store/invitationStore';
 import Navbar from '../components/Navbar';
-import Button from '../components/Button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/Card';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 const Invitations = () => {
   const { myInvitations, isLoading, error, fetchMyInvitations, respondToInvitation, clearError } = useInvitationStore();
@@ -32,7 +32,7 @@ const Invitations = () => {
   return (
     <>
       <Navbar />
-      <div className="page-container justify-start pt-8 pb-12 min-h-[calc(100vh-65px)]">
+      <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
         <div className="w-full max-w-5xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">Pending Invitations</h1>
