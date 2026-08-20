@@ -6,6 +6,7 @@ import { projectInvitations } from "./projectInvitation.model.js";
 import { lists } from "./list.model.js";
 import { tasks } from "./task.model.js";
 import { activityLogs } from "./activityLog.model.js";
+import { discussionMessages } from "./discussionMessage.model.js";
 
 // ── users ──────────────────────────────────────────────────────────────────
 export const usersRelations = relations(users, ({ many }) => ({
@@ -16,6 +17,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   assignedTasks: many(tasks, { relationName: "task_assignee" }),
   createdTasks: many(tasks, { relationName: "task_creator" }),
   activityLogs: many(activityLogs, { relationName: "activity_actor" }),
+  discussionMessages: many(discussionMessages, { relationName: "message_sender" }),
 }));
 
 // ── projects ───────────────────────────────────────────────────────────────
@@ -29,6 +31,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   invitations: many(projectInvitations, { relationName: "project_invitations" }),
   lists: many(lists, { relationName: "project_lists" }),
   activityLogs: many(activityLogs, { relationName: "activity_project" }),
+  discussionMessages: many(discussionMessages, { relationName: "message_project" }),
 }));
 
 // ── project_members ────────────────────────────────────────────────────────
@@ -109,5 +112,19 @@ export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
     fields: [activityLogs.actorId],
     references: [users.id],
     relationName: "activity_actor",
+  }),
+}));
+
+// ── discussion_messages ───────────────────────────────────────────────────
+export const discussionMessagesRelations = relations(discussionMessages, ({ one }) => ({
+  project: one(projects, {
+    fields: [discussionMessages.projectId],
+    references: [projects.id],
+    relationName: "message_project",
+  }),
+  sender: one(users, {
+    fields: [discussionMessages.senderId],
+    references: [users.id],
+    relationName: "message_sender",
   }),
 }));

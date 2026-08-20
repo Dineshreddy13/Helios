@@ -66,6 +66,8 @@ export const VALIDATION_MSG = {
     TASK_TAGS_MAX: "A task can have at most 10 tags.",
     TASK_TAG_MAX_LENGTH: "Each tag must be at most 50 characters long.",
     TASK_DUE_DATE_INVALID: "Due date must be a valid ISO date-time string.",
+    DISCUSSION_CONTENT_MIN: "Message must be at least 1 character long.",
+    DISCUSSION_CONTENT_MAX: "Message must be at most 2000 characters long.",
 }
 
 export const MAIL_MSG = {
@@ -111,4 +113,12 @@ export const TASK_MSG = {
     FILE_DELETED: "File deleted successfully.",
     FILE_NOT_FOUND: "File not found on this task.",
     FILE_LIMIT_EXCEEDED: "A task can have at most 5 files.",
+}
+
+export const DISCUSSION_MSG = {
+    SENT: "Message sent successfully.",
+    UPDATED: "Message updated successfully.",
+    DELETED: "Message deleted successfully.",
+    NOT_FOUND: "Message not found.",
+    NOT_AUTHOR: "You can only modify your own messages.",
 }

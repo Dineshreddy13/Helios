@@ -13,6 +13,7 @@ import myInvitationsRoute from "./modules/projects/myInvitations.route.js";
 import activityRoute from "./modules/activity/activity.route.js";
 import userRoute from "./modules/users/user.route.js";
 import taskRoute from "./modules/tasks/task.route.js";
+import discussionRoute from "./modules/discussions/discussion.route.js";
 import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
 import logger from "./utils/logger.js";
@@ -39,6 +40,7 @@ app.use("/api/invitations", myInvitationsRoute);
 app.use("/api/activity", activityRoute);
 app.use("/api/users", userRoute);
 app.use("/api/projects", taskRoute);
+app.use("/api/projects", discussionRoute);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/api/health", (req, res) => {
