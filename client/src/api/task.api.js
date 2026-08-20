@@ -24,3 +24,17 @@ export const moveTaskApi = async (taskId, data) => {
   const { data: res } = await api.patch(`/api/projects/tasks/${taskId}/move`, data);
   return res;
 };
+
+export const uploadTaskFilesApi = async (taskId, formData) => {
+  const { data: res } = await api.post(`/api/projects/tasks/${taskId}/files`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res;
+};
+
+export const deleteTaskFileApi = async (taskId, fileId) => {
+  const { data: res } = await api.delete(`/api/projects/tasks/${taskId}/files/${fileId}`);
+  return res;
+};

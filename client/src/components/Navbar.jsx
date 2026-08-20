@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useInvitationStore from '../store/invitationStore';
 import useProjectStore from '../store/projectStore';
+import useListStore from '../store/listStore';
+import useTaskStore from '../store/taskStore';
 import useThemeStore from '../store/themeStore';
 import { logoutApi } from '../api/auth.api';
 import ConfirmDialog from './ConfirmDialog';
@@ -52,10 +54,30 @@ const Navbar = () => {
   const { user, logout } = useAuthStore();
   const { myInvitations, fetchMyInvitations, respondToInvitation } = useInvitationStore();
   const { projects, currentProject, fetchProjects } = useProjectStore();
+  const { lists } = useListStore();
+  const { tasksByListId } = useTaskStore();
   const location = useLocation();
   const navigate = useNavigate();
   const isProjectView = location.pathname.startsWith('/projects/') && location.pathname !== '/projects/new';
   const showProjectDetails = currentProject && isProjectView;
+  
+  const matchTask = location.pathname.match(/\/projects\/[^/]+\/tasks\/([^/]+)/);
+  const taskId = matchTask ? matchTask[1] : null;
+  const isTaskView = !!taskId;
+
+  let task = null;
+  let list = null;
+  if (isTaskView) {
+    for (const [listId, tasks] of Object.entries(tasksByListId)) {
+      const t = tasks.find(t => t.id === taskId);
+      if (t) {
+        task = t;
+        list = lists.find(l => l.id === t.listId);
+        break;
+      }
+    }
+  }
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [processingId, setProcessingId] = useState(null);
@@ -147,6 +169,22 @@ const Navbar = () => {
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                    </BreadcrumbItem>
+                  </>
+                )}
+                {isTaskView && list && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="text-muted-foreground/80">{list.name}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                )}
+                {isTaskView && task && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="max-w-[200px] truncate" title={task.title}>{task.title}</BreadcrumbPage>
                     </BreadcrumbItem>
                   </>
                 )}

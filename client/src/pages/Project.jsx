@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import { Button } from '@/components/ui/button';
+import { Calendar, CalendarDayButton } from '@/components/ui/calendar';
 import Badge from '../components/Badge';
 import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -16,7 +17,8 @@ const Project = () => {
   const navigate = useNavigate();
   const { currentProject, isLoading, error, fetchProjectById, clearError } = useProjectStore();
   const { fetchLists, setupSocketListeners, teardownSocketListeners } = useListStore();
-  const { fetchTasks, setupSocketListeners: setupTaskSockets, teardownSocketListeners: teardownTaskSockets } = useTaskStore();
+  const { tasksByListId, fetchTasks, setupSocketListeners: setupTaskSockets, teardownSocketListeners: teardownTaskSockets } = useTaskStore();
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     fetchProjectById(projectId);
@@ -36,6 +38,17 @@ const Project = () => {
     };
   }, [projectId, fetchProjectById, clearError, fetchLists, setupSocketListeners, teardownSocketListeners, fetchTasks, setupTaskSockets, teardownTaskSockets]);
 
+  const taskDates = useMemo(() => {
+    const dates = [];
+    Object.values(tasksByListId).forEach(tasks => {
+      tasks.forEach(task => {
+        if (task.dueDate) {
+          dates.push(new Date(task.dueDate));
+        }
+      });
+    });
+    return dates;
+  }, [tasksByListId]);
 
   if (isLoading && !currentProject) {
     return (
@@ -108,9 +121,46 @@ const Project = () => {
 
             {/* Sidebar Area (Description & Members) */}
             <div className="lg:col-span-1 flex flex-col gap-8">
+              <div className="flex justify-center">
+                <Calendar 
+                  mode="single" 
+                  className="rounded-lg border bg-card w-full flex justify-center" 
+                  modifiers={{ hasTask: taskDates }}
+                  components={{
+                    DayButton: ({ children, modifiers, day, ...props }) => {
+                      return (
+                        <CalendarDayButton day={day} modifiers={modifiers} {...props} className={props.className + " relative"}>
+                          {children}
+                          {modifiers.hasTask && !modifiers.outside && (
+                            <span className="absolute bottom-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                          )}
+                        </CalendarDayButton>
+                      )
+                    },
+                  }}
+                />
+              </div>
               <div>
                 <h3 className="text-lg font-semibold mb-3">About</h3>
-                <p className="text-gray-400 text-sm">{currentProject.description || 'No description provided.'}</p>
+                <div className="text-gray-400 text-sm">
+                  {(() => {
+                    const desc = currentProject.description || 'No description provided.';
+                    const words = desc.trim().split(/\s+/);
+                    if (words.length <= 25) return <p>{desc}</p>;
+                    
+                    return (
+                      <p>
+                        {isDescriptionExpanded ? desc : words.slice(0, 25).join(' ') + '...'}
+                        <button 
+                          onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)} 
+                          className="text-blue-500 hover:text-blue-400 ml-1 font-medium"
+                        >
+                          {isDescriptionExpanded ? 'less' : 'more'}
+                        </button>
+                      </p>
+                    );
+                  })()}
+                </div>
               </div>
               <ProjectMembers projectId={projectId} isOwner={currentProject.role === 'owner'} />
             </div>

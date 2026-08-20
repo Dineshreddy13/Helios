@@ -5,6 +5,8 @@ import {
   getTasksApi,
   moveTaskApi,
   updateTaskApi,
+  uploadTaskFilesApi,
+  deleteTaskFileApi,
 } from '../api/task.api';
 import socket from '../lib/socket';
 
@@ -108,6 +110,60 @@ const useTaskStore = create((set, get) => ({
     } catch (error) {
       set({
         error: error.response?.data?.message || 'Failed to delete task',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  uploadTaskFiles: async (taskId, files) => {
+    set({ isLoading: true, error: null });
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('files', file);
+      });
+      const response = await uploadTaskFilesApi(taskId, formData);
+      set((state) => {
+        const listId = response.task.listId;
+        const listTasks = state.tasksByListId[listId] || [];
+        return {
+          tasksByListId: {
+            ...state.tasksByListId,
+            [listId]: listTasks.map((t) => (t.id === taskId ? response.task : t)),
+          },
+          isLoading: false,
+        };
+      });
+      return response.task;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Failed to upload files',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  deleteTaskFile: async (taskId, fileId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await deleteTaskFileApi(taskId, fileId);
+      set((state) => {
+        const listId = response.task.listId;
+        const listTasks = state.tasksByListId[listId] || [];
+        return {
+          tasksByListId: {
+            ...state.tasksByListId,
+            [listId]: listTasks.map((t) => (t.id === taskId ? response.task : t)),
+          },
+          isLoading: false,
+        };
+      });
+      return response.task;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Failed to delete file',
         isLoading: false,
       });
       throw error;
