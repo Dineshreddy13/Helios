@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
 import { projects } from "./project.model.js";
 
@@ -16,4 +16,7 @@ export const activityLogs = pgTable("activity_logs", {
   metadata: jsonb("metadata"),
   message: text("message").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("activity_logs_project_id_idx").on(t.projectId),
+  index("activity_logs_actor_id_idx").on(t.actorId)
+]);

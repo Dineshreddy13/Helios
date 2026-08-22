@@ -43,6 +43,13 @@
       "when": 1787208526942,
       "tag": "0005_careless_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787394287531,
+      "tag": "0006_tidy_maggott",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
 import { lists } from "./list.model.js";
 import { projects } from "./project.model.js";
@@ -26,4 +26,7 @@ export const tasks = pgTable("tasks", {
     .references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("tasks_list_id_idx").on(t.listId),
+  index("tasks_project_id_idx").on(t.projectId)
+]);

@@ -1,4 +1,4 @@
-﻿import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
 import { projects } from "./project.model.js";
 
 export const lists = pgTable("lists", {
@@ -10,4 +10,6 @@ export const lists = pgTable("lists", {
   position: integer("position").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("lists_project_id_idx").on(t.projectId)
+]);

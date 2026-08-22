@@ -1,4 +1,4 @@
-﻿import { pgEnum, pgTable, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, timestamp, unique, uuid, index } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
 import { projects } from "./project.model.js";
 
@@ -20,5 +20,9 @@ export const projectMembers = pgTable(
     role: projectMemberRoleEnum("role").notNull().default("member"),
     joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique("project_members_project_user_unique").on(t.projectId, t.userId)]
+  (t) => [
+    unique("project_members_project_user_unique").on(t.projectId, t.userId),
+    index("project_members_project_id_idx").on(t.projectId),
+    index("project_members_user_id_idx").on(t.userId)
+  ]
 );

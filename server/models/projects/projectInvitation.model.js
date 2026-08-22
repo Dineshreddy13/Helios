@@ -1,4 +1,4 @@
-﻿import { pgEnum, pgTable, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, timestamp, unique, uuid, index } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
 import { projects } from "./project.model.js";
 
@@ -27,5 +27,7 @@ export const projectInvitations = pgTable(
   },
   (t) => [
     unique("project_invitations_project_user_unique").on(t.projectId, t.invitedUserId),
+    index("project_invitations_project_id_idx").on(t.projectId),
+    index("project_invitations_invited_user_id_idx").on(t.invitedUserId)
   ]
 );
