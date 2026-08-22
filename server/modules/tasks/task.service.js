@@ -4,25 +4,13 @@ import { LIST_MSG, PROJECT_MSG, TASK_MSG } from "../../config/constants.js";
 import { db } from "../../database/db.js";
 import { lists, projectMembers, tasks, users } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { ApiError } from "../../utils/ApiError.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { getCache, setCache, delCache } from "../../utils/cache.js";
+import { getMembership, requireProjectMember } from "../../utils/permissions.js";
+import { deleteFile, deleteFiles } from "../../utils/storage.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
-
-const getMembership = async (projectId, userId) => {
-    const [row] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
-        .limit(1);
-    return row ?? null;
-};
 
 // Aliased assignee table so we can join users twice if needed in the future
 const assignee = alias(users, "assignee");
@@ -82,10 +70,7 @@ export const createTask = async (listId, userId, { title, description, assigneeI
     }
 
     // 2. verify creator is a project member
-    const membership = await getMembership(list.projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(list.projectId, userId);
 
     // 3. if assigneeId provided, verify assignee is a project member
     if (assigneeId) {
@@ -138,14 +123,19 @@ export const createTask = async (listId, userId, { title, description, assigneeI
         metadata: { taskTitle: title },
     });
 
+    await delCache(`tasks:project:${list.projectId}`);
+
     return { task, message: TASK_MSG.CREATED };
 };
 
 // ── getTasksForProject ─────────────────────────────────────────────────────
 export const getTasksForProject = async (projectId, userId) => {
-    const membership = await getMembership(projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
+    await requireProjectMember(projectId, userId);
+
+    const cacheKey = `tasks:project:${projectId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+        return { tasks: cached };
     }
 
     const rows = await db
@@ -155,6 +145,7 @@ export const getTasksForProject = async (projectId, userId) => {
         .where(eq(tasks.projectId, projectId))
         .orderBy(asc(tasks.listId), asc(tasks.position));
 
+    await setCache(cacheKey, rows);
     return { tasks: rows };
 };
 
@@ -172,10 +163,7 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     }
 
     // 2. verify membership
-    const membership = await getMembership(existing.projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(existing.projectId, userId);
 
     // 3. if assigneeId provided (and not explicitly set to null), verify assignee is a member
     if (assigneeId) {
@@ -222,6 +210,8 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
         metadata: { taskTitle: task.title, changedFields },
     });
 
+    await delCache(`tasks:project:${existing.projectId}`);
+
     return { task, message: TASK_MSG.UPDATED };
 };
 
@@ -237,19 +227,11 @@ export const deleteTask = async (taskId, userId) => {
         throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
-    const membership = await getMembership(existing.projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(existing.projectId, userId);
 
     // Delete physical files from disk
     if (existing.files && Array.isArray(existing.files)) {
-        for (const file of existing.files) {
-            const filePath = path.join(__dirname, "..", "..", "uploads", "tasks", path.basename(file.url));
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        }
+        deleteFiles(existing.files.map(f => f.url));
     }
 
     await db.delete(tasks).where(eq(tasks.id, taskId));
@@ -262,6 +244,8 @@ export const deleteTask = async (taskId, userId) => {
         targetId: taskId,
         metadata: { taskTitle: existing.title },
     });
+
+    await delCache(`tasks:project:${existing.projectId}`);
 
     return {
         message: TASK_MSG.DELETED,
@@ -285,10 +269,7 @@ export const moveTask = async (taskId, userId, { targetListId, targetPosition })
     }
 
     // 2. verify membership
-    const membership = await getMembership(existing.projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(existing.projectId, userId);
 
     // 3. verify targetList belongs to the same project
     const [targetList] = await db
@@ -419,6 +400,8 @@ export const moveTask = async (taskId, userId, { targetListId, targetPosition })
         },
     });
 
+    await delCache(`tasks:project:${existing.projectId}`);
+
     return {
         message: TASK_MSG.MOVED,
         task,
@@ -439,18 +422,13 @@ export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
         throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
-    const membership = await getMembership(existing.projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(existing.projectId, userId);
 
     const currentFiles = Array.isArray(existing.files) ? existing.files : [];
 
     if (currentFiles.length + uploadedFiles.length > 5) {
         // Clean up the newly uploaded files since we're rejecting
-        for (const f of uploadedFiles) {
-            if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
-        }
+        deleteFiles(uploadedFiles.map(f => f.path));
         throw new ApiError(400, TASK_MSG.FILE_LIMIT_EXCEEDED);
     }
 
@@ -476,6 +454,8 @@ export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
         .where(eq(tasks.id, taskId))
         .limit(1);
 
+    await delCache(`tasks:project:${existing.projectId}`);
+
     return { task, message: TASK_MSG.FILE_UPLOADED };
 };
 
@@ -491,10 +471,7 @@ export const deleteTaskFile = async (taskId, userId, fileId) => {
         throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
-    const membership = await getMembership(existing.projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(existing.projectId, userId);
 
     const currentFiles = Array.isArray(existing.files) ? existing.files : [];
     const fileToDelete = currentFiles.find((f) => f.id === fileId);
@@ -504,10 +481,7 @@ export const deleteTaskFile = async (taskId, userId, fileId) => {
     }
 
     // Delete from disk
-    const diskPath = path.join(__dirname, "..", "..", "uploads", "tasks", path.basename(fileToDelete.url));
-    if (fs.existsSync(diskPath)) {
-        fs.unlinkSync(diskPath);
-    }
+    deleteFile(fileToDelete.url);
 
     const updatedFiles = currentFiles.filter((f) => f.id !== fileId);
 
@@ -522,6 +496,8 @@ export const deleteTaskFile = async (taskId, userId, fileId) => {
         .leftJoin(assignee, eq(tasks.assigneeId, assignee.id))
         .where(eq(tasks.id, taskId))
         .limit(1);
+
+    await delCache(`tasks:project:${existing.projectId}`);
 
     return { task, message: TASK_MSG.FILE_DELETED };
 };

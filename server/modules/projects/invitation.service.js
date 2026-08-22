@@ -9,17 +9,7 @@ import {
 } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
 import { ApiError } from "../../utils/ApiError.js";
-
-// ── helpers ───────────────────────────────────────────────────────────────
-
-const getMembership = async (projectId, userId) => {
-    const [row] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
-        .limit(1);
-    return row ?? null;
-};
+import { getMembership, requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../../utils/permissions.js";
 
 // invited user alias (drizzle needs aliased table for multiple joins on same table)
 import { alias } from "drizzle-orm/pg-core";
@@ -29,10 +19,7 @@ const inviter = alias(users, "inviter");
 // ── inviteUserToProject ────────────────────────────────────────────────────
 export const inviteUserToProject = async (projectId, invitedUserId, inviterId) => {
     // 1. verify inviter is the owner
-    const inviterMembership = await getMembership(projectId, inviterId);
-    if (!inviterMembership || inviterMembership.role !== "owner") {
-        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
-    }
+    await requireProjectOwner(projectId, inviterId);
 
     // 2. verify invitedUser is not already a member
     const existingMember = await getMembership(projectId, invitedUserId);
@@ -95,10 +82,7 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
 
 // ── getProjectInvitations ──────────────────────────────────────────────────
 export const getProjectInvitations = async (projectId, requestingUserId) => {
-    const membership = await getMembership(projectId, requestingUserId);
-    if (!membership || membership.role !== "owner") {
-        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
-    }
+    await requireProjectOwner(projectId, requestingUserId);
 
     const rows = await db
         .select({
@@ -196,6 +180,8 @@ export const respondToInvitation = async (invitationId, userId, response) => {
             return updatedInvitation;
         });
 
+        await invalidateMembershipCache(invitation.projectId, userId);
+
         return { invitation: updated, message: INVITATION_MSG.ACCEPTED };
     }
 
@@ -220,10 +206,7 @@ export const respondToInvitation = async (invitationId, userId, response) => {
 
 // ── getProjectMembers ──────────────────────────────────────────────────────
 export const getProjectMembers = async (projectId, requestingUserId) => {
-    const membership = await getMembership(projectId, requestingUserId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(projectId, requestingUserId);
 
     const rows = await db
         .select({

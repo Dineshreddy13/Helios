@@ -10,17 +10,9 @@ import {
 } from "../../models/index.js";
 import { getIO } from "../../sockets/index.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { requireProjectMember } from "../../utils/permissions.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
-
-const getMembership = async (projectId, userId) => {
-    const [row] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
-        .limit(1);
-    return row ?? null;
-};
 
 const actor = alias(users, "actor");
 
@@ -101,10 +93,7 @@ export const logActivity = async (
 
 // ── getProjectActivity ─────────────────────────────────────────────────────
 export const getProjectActivity = async (projectId, userId, { limit = 20, offset = 0 } = {}) => {
-    const membership = await getMembership(projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(projectId, userId);
 
     const rows = await db
         .select({

@@ -10,6 +10,8 @@ import {
 } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { getCache, setCache, delCache } from "../../utils/cache.js";
+import { requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../../utils/permissions.js";
 
 // ── createProject ──────────────────────────────────────────────────────────
 export const createProject = async (userId, { name, description, includeReadme }) => {
@@ -42,11 +44,20 @@ export const createProject = async (userId, { name, description, includeReadme }
         return newProject;
     });
 
+    await invalidateMembershipCache(project.id, userId);
+    await delCache(`projects:user:${userId}`);
+
     return { project, message: PROJECT_MSG.CREATED };
 };
 
 // ── getProjectsForUser ─────────────────────────────────────────────────────
 export const getProjectsForUser = async (userId) => {
+    const cacheKey = `projects:user:${userId}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+        return { projects: cached };
+    }
+
     const rows = await db
         .select({
             id: projects.id,
@@ -62,6 +73,7 @@ export const getProjectsForUser = async (userId) => {
         .where(eq(projectMembers.userId, userId))
         .orderBy(desc(projects.updatedAt));
 
+    await setCache(cacheKey, rows);
     return { projects: rows };
 };
 
@@ -77,17 +89,9 @@ export const getProjectById = async (projectId, userId) => {
         throw new ApiError(404, PROJECT_MSG.NOT_FOUND);
     }
 
-    const [membership] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
-        .limit(1);
+    const role = await requireProjectMember(projectId, userId);
 
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
-
-    return { project: { ...project, role: membership.role } };
+    return { project: { ...project, role } };
 };
 
 // ── deleteProject ──────────────────────────────────────────────────────────
@@ -102,17 +106,10 @@ export const deleteProject = async (projectId, userId) => {
         throw new ApiError(404, PROJECT_MSG.NOT_FOUND);
     }
 
-    const [membership] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
-        .limit(1);
-
-    if (!membership || membership.role !== "owner") {
-        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
-    }
+    await requireProjectOwner(projectId, userId);
 
     await db.delete(projects).where(eq(projects.id, projectId));
+    await delCache(`projects:user:${userId}`);
 
     return { message: PROJECT_MSG.DELETED };
 };
@@ -129,15 +126,7 @@ export const updateProjectReadme = async (projectId, userId, { readme }) => {
         throw new ApiError(404, PROJECT_MSG.NOT_FOUND);
     }
 
-    const [membership] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, userId)))
-        .limit(1);
-
-    if (!membership || membership.role !== "owner") {
-        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
-    }
+    await requireProjectOwner(projectId, userId);
 
     const [updatedProject] = await db
         .update(projects)

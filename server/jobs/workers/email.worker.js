@@ -2,12 +2,12 @@ import { Worker } from "bullmq";
 import { redis } from "../../config/redis.js";
 import { transporter } from "../../config/mail.js";
 import { MAIL_FROM } from "../../config/env.js";
-import { renderTemplate } from "../../utils/templateRenderer.js";
+import { renderTemplate } from "../../utils/templateRenderer.jsx";
 
 const processEmailJob = async (job) => {
   const { to, subject, template, data } = job.data;
 
-  const html = renderTemplate(template, data);
+  const html = await renderTemplate(template, data);
   
   await transporter.sendMail({
     from: MAIL_FROM,
