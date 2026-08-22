@@ -7,13 +7,7 @@ import cookieParser from "cookie-parser";
 import { PORT, CLIENT_URL } from "./config/env.js";
 import { APP_MSG } from "./config/constants.js";
 import { connectDB } from "./database/db.js";
-import authRoute from "./modules/auth/auth.route.js";
-import projectRoute from "./modules/projects/project.route.js";
-import myInvitationsRoute from "./modules/projects/myInvitations.route.js";
-import activityRoute from "./modules/activity/activity.route.js";
-import userRoute from "./modules/users/user.route.js";
-import taskRoute from "./modules/tasks/task.route.js";
-import discussionRoute from "./modules/discussions/discussion.route.js";
+import apiRoutes from "./routes/index.js";
 import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
 import logger from "./utils/logger.js";
@@ -35,13 +29,7 @@ app.use(
   })
 );
 
-app.use("/api/auth", authRoute);
-app.use("/api/projects", projectRoute);
-app.use("/api/invitations", myInvitationsRoute);
-app.use("/api/activity", activityRoute);
-app.use("/api/users", userRoute);
-app.use("/api/projects", taskRoute);
-app.use("/api/projects", discussionRoute);
+app.use("/api/v1", apiRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/api/health", (req, res) => {
