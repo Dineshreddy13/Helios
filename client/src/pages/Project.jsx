@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar, CalendarDayButton } from '@/components/ui/calendar';
 import Badge from '../components/Badge';
 import Navbar from '../components/Navbar';
-import ConfirmDialog from '../components/ConfirmDialog';
 import ProjectMembers from '../components/ProjectMembers';
 import ProjectReadme from '../components/ProjectReadme';
 import Board from '../components/board/Board';
@@ -22,7 +21,7 @@ const Project = () => {
 
   useEffect(() => {
     fetchProjectById(projectId);
-    
+
     fetchLists(projectId).then(() => {
       setupSocketListeners(projectId);
     });
@@ -108,23 +107,23 @@ const Project = () => {
 
           {/* Content Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            
+
             {/* Main Content Area (Board) */}
             <div className="lg:col-span-4 min-h-[400px]">
               <Board projectId={projectId} />
-              <ProjectReadme 
-                projectId={projectId} 
-                isOwner={currentProject.role === 'owner'} 
-                initialReadme={currentProject.readme} 
+              <ProjectReadme
+                projectId={projectId}
+                isOwner={currentProject.role === 'owner'}
+                initialReadme={currentProject.readme}
               />
             </div>
 
             {/* Sidebar Area (Description & Members) */}
             <div className="lg:col-span-1 flex flex-col gap-8">
               <div className="flex justify-center">
-                <Calendar 
-                  mode="single" 
-                  className="rounded-lg border bg-card w-full flex justify-center" 
+                <Calendar
+                  mode="single"
+                  className="rounded-lg border bg-card w-full flex justify-center"
                   modifiers={{ hasTask: taskDates }}
                   components={{
                     DayButton: ({ children, modifiers, day, ...props }) => {
@@ -147,12 +146,12 @@ const Project = () => {
                     const desc = currentProject.description || 'No description provided.';
                     const words = desc.trim().split(/\s+/);
                     if (words.length <= 25) return <p>{desc}</p>;
-                    
+
                     return (
                       <p>
                         {isDescriptionExpanded ? desc : words.slice(0, 25).join(' ') + '...'}
-                        <button 
-                          onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)} 
+                        <button
+                          onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                           className="text-blue-500 hover:text-blue-400 ml-1 font-medium"
                         >
                           {isDescriptionExpanded ? 'less' : 'more'}
