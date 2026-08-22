@@ -9,6 +9,7 @@ import {
     tasks,
 } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 // ── createProject ──────────────────────────────────────────────────────────
 export const createProject = async (userId, { name, description, includeReadme }) => {
@@ -41,7 +42,7 @@ export const createProject = async (userId, { name, description, includeReadme }
         return newProject;
     });
 
-    return { status: 201, message: PROJECT_MSG.CREATED, project };
+    return { project, message: PROJECT_MSG.CREATED };
 };
 
 // ── getProjectsForUser ─────────────────────────────────────────────────────
@@ -61,7 +62,7 @@ export const getProjectsForUser = async (userId) => {
         .where(eq(projectMembers.userId, userId))
         .orderBy(desc(projects.updatedAt));
 
-    return { status: 200, projects: rows };
+    return { projects: rows };
 };
 
 // ── getProjectById ─────────────────────────────────────────────────────────
@@ -73,7 +74,7 @@ export const getProjectById = async (projectId, userId) => {
         .limit(1);
 
     if (!project) {
-        return { status: 404, message: PROJECT_MSG.NOT_FOUND };
+        throw new ApiError(404, PROJECT_MSG.NOT_FOUND);
     }
 
     const [membership] = await db
@@ -83,10 +84,10 @@ export const getProjectById = async (projectId, userId) => {
         .limit(1);
 
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
-    return { status: 200, project: { ...project, role: membership.role } };
+    return { project: { ...project, role: membership.role } };
 };
 
 // ── deleteProject ──────────────────────────────────────────────────────────
@@ -98,7 +99,7 @@ export const deleteProject = async (projectId, userId) => {
         .limit(1);
 
     if (!project) {
-        return { status: 404, message: PROJECT_MSG.NOT_FOUND };
+        throw new ApiError(404, PROJECT_MSG.NOT_FOUND);
     }
 
     const [membership] = await db
@@ -108,12 +109,12 @@ export const deleteProject = async (projectId, userId) => {
         .limit(1);
 
     if (!membership || membership.role !== "owner") {
-        return { status: 403, message: PROJECT_MSG.NOT_OWNER };
+        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
     }
 
     await db.delete(projects).where(eq(projects.id, projectId));
 
-    return { status: 200, message: PROJECT_MSG.DELETED };
+    return { message: PROJECT_MSG.DELETED };
 };
 
 // ── updateProjectReadme ────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ export const updateProjectReadme = async (projectId, userId, { readme }) => {
         .limit(1);
 
     if (!project) {
-        return { status: 404, message: PROJECT_MSG.NOT_FOUND };
+        throw new ApiError(404, PROJECT_MSG.NOT_FOUND);
     }
 
     const [membership] = await db
@@ -135,7 +136,7 @@ export const updateProjectReadme = async (projectId, userId, { readme }) => {
         .limit(1);
 
     if (!membership || membership.role !== "owner") {
-        return { status: 403, message: PROJECT_MSG.NOT_OWNER };
+        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
     }
 
     const [updatedProject] = await db
@@ -144,5 +145,5 @@ export const updateProjectReadme = async (projectId, userId, { readme }) => {
         .where(eq(projects.id, projectId))
         .returning();
 
-    return { status: 200, message: "Readme updated successfully", project: updatedProject };
+    return { project: updatedProject, message: "Readme updated successfully" };
 };

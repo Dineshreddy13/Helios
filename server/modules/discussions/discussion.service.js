@@ -2,6 +2,7 @@ import { eq, and, lt, desc } from "drizzle-orm";
 import { db } from "../../database/db.js";
 import { discussionMessages, projectMembers, users } from "../../models/index.js";
 import { PROJECT_MSG, DISCUSSION_MSG } from "../../config/constants.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 /**
  * Verify the user is a member of the project.
@@ -45,7 +46,7 @@ const buildMessageSelect = () => ({
 export const getMessages = async (projectId, userId, cursor) => {
     const membership = await verifyMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const conditions = [eq(discussionMessages.projectId, projectId)];
@@ -67,7 +68,7 @@ export const getMessages = async (projectId, userId, cursor) => {
             ? messages[messages.length - 1].createdAt.toISOString()
             : null;
 
-    return { status: 200, messages, nextCursor };
+    return { messages, nextCursor };
 };
 
 /**
@@ -76,7 +77,7 @@ export const getMessages = async (projectId, userId, cursor) => {
 export const sendMessage = async (projectId, userId, content) => {
     const membership = await verifyMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const [inserted] = await db
@@ -95,7 +96,7 @@ export const sendMessage = async (projectId, userId, content) => {
         .where(eq(discussionMessages.id, inserted.id))
         .limit(1);
 
-    return { status: 201, message: DISCUSSION_MSG.SENT, discussion: message };
+    return { message: DISCUSSION_MSG.SENT, discussion: message };
 };
 
 /**
@@ -109,11 +110,11 @@ export const editMessage = async (messageId, userId, content) => {
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: DISCUSSION_MSG.NOT_FOUND };
+        throw new ApiError(404, DISCUSSION_MSG.NOT_FOUND);
     }
 
     if (existing.senderId !== userId) {
-        return { status: 403, message: DISCUSSION_MSG.NOT_AUTHOR };
+        throw new ApiError(403, DISCUSSION_MSG.NOT_AUTHOR);
     }
 
     await db
@@ -128,7 +129,7 @@ export const editMessage = async (messageId, userId, content) => {
         .where(eq(discussionMessages.id, messageId))
         .limit(1);
 
-    return { status: 200, message: DISCUSSION_MSG.UPDATED, discussion: message };
+    return { message: DISCUSSION_MSG.UPDATED, discussion: message };
 };
 
 /**
@@ -142,11 +143,11 @@ export const deleteMessage = async (messageId, userId) => {
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: DISCUSSION_MSG.NOT_FOUND };
+        throw new ApiError(404, DISCUSSION_MSG.NOT_FOUND);
     }
 
     if (existing.senderId !== userId) {
-        return { status: 403, message: DISCUSSION_MSG.NOT_AUTHOR };
+        throw new ApiError(403, DISCUSSION_MSG.NOT_AUTHOR);
     }
 
     await db
@@ -154,7 +155,6 @@ export const deleteMessage = async (messageId, userId) => {
         .where(eq(discussionMessages.id, messageId));
 
     return {
-        status: 200,
         message: DISCUSSION_MSG.DELETED,
         messageId,
         projectId: existing.projectId,

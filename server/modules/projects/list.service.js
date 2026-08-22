@@ -3,6 +3,7 @@ import { LIST_MSG, PROJECT_MSG } from "../../config/constants.js";
 import { db } from "../../database/db.js";
 import { lists, projectMembers } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 // ── helper ────────────────────────────────────────────────────────────────
 
@@ -19,7 +20,7 @@ const getMembership = async (projectId, userId) => {
 export const createList = async (projectId, userId, { name }) => {
     const membership = await getMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const [{ maxPosition }] = await db
@@ -43,14 +44,14 @@ export const createList = async (projectId, userId, { name }) => {
         metadata: { listName: name },
     });
 
-    return { status: 201, message: LIST_MSG.CREATED, list };
+    return { list, message: LIST_MSG.CREATED };
 };
 
 // ── getListsForProject ─────────────────────────────────────────────────────
 export const getListsForProject = async (projectId, userId) => {
     const membership = await getMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const rows = await db
@@ -59,7 +60,7 @@ export const getListsForProject = async (projectId, userId) => {
         .where(eq(lists.projectId, projectId))
         .orderBy(asc(lists.position));
 
-    return { status: 200, lists: rows };
+    return { lists: rows };
 };
 
 // ── updateList ─────────────────────────────────────────────────────────────
@@ -71,12 +72,12 @@ export const updateList = async (listId, userId, { name }) => {
         .limit(1);
 
     if (!list) {
-        return { status: 404, message: LIST_MSG.NOT_FOUND };
+        throw new ApiError(404, LIST_MSG.NOT_FOUND);
     }
 
     const membership = await getMembership(list.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const [updated] = await db
@@ -94,7 +95,7 @@ export const updateList = async (listId, userId, { name }) => {
         metadata: { oldName: list.name, newName: name },
     });
 
-    return { status: 200, message: LIST_MSG.UPDATED, list: updated };
+    return { list: updated, message: LIST_MSG.UPDATED };
 };
 
 // ── deleteList ─────────────────────────────────────────────────────────────
@@ -106,12 +107,12 @@ export const deleteList = async (listId, userId) => {
         .limit(1);
 
     if (!list) {
-        return { status: 404, message: LIST_MSG.NOT_FOUND };
+        throw new ApiError(404, LIST_MSG.NOT_FOUND);
     }
 
     const membership = await getMembership(list.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     await db.delete(lists).where(eq(lists.id, listId));
@@ -125,14 +126,14 @@ export const deleteList = async (listId, userId) => {
         metadata: { listName: list.name },
     });
 
-    return { status: 200, message: LIST_MSG.DELETED, projectId: list.projectId, listId };
+    return { projectId: list.projectId, listId, message: LIST_MSG.DELETED };
 };
 
 // ── reorderLists ───────────────────────────────────────────────────────────
 export const reorderLists = async (projectId, userId, orderedListIds) => {
     const membership = await getMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const existingLists = await db
@@ -147,7 +148,7 @@ export const reorderLists = async (projectId, userId, orderedListIds) => {
     const allMatch = [...incomingIds].every((id) => existingIds.has(id));
 
     if (!sameSize || !allMatch) {
-        return { status: 400, message: LIST_MSG.IDS_MISMATCH };
+        throw new ApiError(400, LIST_MSG.IDS_MISMATCH);
     }
 
     const updated = await db.transaction(async (tx) => {
@@ -162,5 +163,5 @@ export const reorderLists = async (projectId, userId, orderedListIds) => {
         return results.flat().sort((a, b) => a.position - b.position);
     });
 
-    return { status: 200, message: LIST_MSG.REORDERED, lists: updated };
+    return { lists: updated, message: LIST_MSG.REORDERED };
 };

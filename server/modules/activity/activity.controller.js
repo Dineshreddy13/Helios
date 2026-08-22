@@ -3,35 +3,26 @@ import {
     getDashboardActivity,
 } from "./activity.service.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 
 export const getProjectActivityHandler = asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;
     const limit = parseInt(req.query.limit) || 20;
     const offset = parseInt(req.query.offset) || 0;
 
-    const payload = await getProjectActivity(projectId, req.user.id, { limit, offset });
+    const activities = await getProjectActivity(projectId, req.user.id, { limit, offset });
 
-    if (payload.status !== 200) {
-        return res.status(payload.status).json({ success: false, message: payload.message });
-    }
-
-    return res.status(payload.status).json({
-        success: true,
-        activities: payload.activities,
-    });
+    return res.status(200).json(
+        new ApiResponse(200, { activities }, "Project activity retrieved successfully")
+    );
 });
 
 export const getDashboardActivityHandler = asyncHandler(async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 30;
 
-    const payload = await getDashboardActivity(req.user.id, { limit });
+    const activities = await getDashboardActivity(req.user.id, { limit });
 
-    if (payload.status !== 200) {
-        return res.status(payload.status).json({ success: false, message: payload.message });
-    }
-
-    return res.status(payload.status).json({
-        success: true,
-        activities: payload.activities,
-    });
+    return res.status(200).json(
+        new ApiResponse(200, { activities }, "Dashboard activity retrieved successfully")
+    );
 });

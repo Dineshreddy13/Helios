@@ -1,5 +1,6 @@
 import logger from "../utils/logger.js";
 import { ZodError } from "zod";
+import { ApiError } from "../utils/ApiError.js";
 
 /**
  * Global error handling middleware.
@@ -15,6 +16,10 @@ export const errorHandler = (err, req, res, next) => {
         statusCode = 400;
         message = "Validation Error";
         errors = err.flatten().fieldErrors;
+    } else if (err instanceof ApiError) {
+        statusCode = err.statusCode;
+        message = err.message;
+        errors = err.errors?.length ? err.errors : null;
     }
 
     // Log the error

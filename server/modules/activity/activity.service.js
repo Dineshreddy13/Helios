@@ -9,6 +9,7 @@ import {
     users,
 } from "../../models/index.js";
 import { getIO } from "../../sockets/index.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -102,7 +103,7 @@ export const logActivity = async (
 export const getProjectActivity = async (projectId, userId, { limit = 20, offset = 0 } = {}) => {
     const membership = await getMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const rows = await db
@@ -128,7 +129,7 @@ export const getProjectActivity = async (projectId, userId, { limit = 20, offset
         .limit(limit)
         .offset(offset);
 
-    return { status: 200, activities: rows };
+    return rows;
 };
 
 // ── getDashboardActivity ───────────────────────────────────────────────────
@@ -163,5 +164,5 @@ export const getDashboardActivity = async (userId, { limit = 30 } = {}) => {
         .orderBy(desc(activityLogs.createdAt))
         .limit(limit);
 
-    return { status: 200, activities: rows };
+    return rows;
 };

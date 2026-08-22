@@ -1,7 +1,8 @@
 import { getCurrentUser, login, logout, register, resendOtp, verifyOtp } from "./auth.service.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 
-const sendAuthResponse = (res, payload) => {
+const sendAuthResponse = (res, payload, statusCode = 200) => {
   const cookiePayload = { httpOnly: true, path: "/" };
 
   if (payload.cookieOptions) {
@@ -11,73 +12,54 @@ const sendAuthResponse = (res, payload) => {
     });
   }
 
-  return res.status(payload.status).json({
-    success: true,
-    message: payload.message,
-    user: payload.user,
-  });
+  // we use a clean data object to wrap user
+  return res.status(statusCode).json(
+    new ApiResponse(statusCode, { user: payload.user }, payload.message)
+  );
 };
 
 export const registerUser = asyncHandler(async (req, res, next) => {
   const payload = await register(req.validated.body);
 
-  if (payload.status !== 201) {
-    return res.status(payload.status).json({ success: false, message: payload.message });
-  }
-
-  return res.status(payload.status).json({
-    success: true,
-    message: payload.message,
-    requestId: payload.requestId,
-    expiresInSeconds: payload.expiresInSeconds,
-  });
+  return res.status(201).json(
+    new ApiResponse(201, {
+      requestId: payload.requestId,
+      expiresInSeconds: payload.expiresInSeconds,
+    }, payload.message)
+  );
 });
 
 export const loginUser = asyncHandler(async (req, res, next) => {
   const payload = await login(req.validated.body);
-
-  if (payload.status !== 200) {
-    return res.status(payload.status).json({ success: false, message: payload.message });
-  }
-
-  return sendAuthResponse(res, payload);
+  return sendAuthResponse(res, payload, 200);
 });
 
 export const getMe = asyncHandler(async (req, res, next) => {
   const payload = await getCurrentUser(req.user);
-  return res.status(payload.status).json({ success: true, user: payload.user });
+  return res.status(200).json(
+    new ApiResponse(200, { user: payload.user }, "Current user retrieved successfully")
+  );
 });
 
 export const logoutUser = asyncHandler(async (req, res, next) => {
   const payload = await logout();
-
   res.clearCookie(payload.cookieName, payload.cookieOptions);
-
-  return res.status(payload.status).json({ success: true, message: payload.message });
+  return res.status(200).json(new ApiResponse(200, null, payload.message));
 });
 
 export const verifyOtpCode = asyncHandler(async (req, res, next) => {
   const payload = await verifyOtp(req.validated.body);
-
-  if (payload.status !== 200) {
-    return res.status(payload.status).json({ success: false, message: payload.message });
-  }
-
-  return sendAuthResponse(res, payload);
+  return sendAuthResponse(res, payload, 200);
 });
 
 export const resendOtpCode = asyncHandler(async (req, res, next) => {
   const payload = await resendOtp(req.validated.body);
 
-  if (payload.status !== 200) {
-    return res.status(payload.status).json({ success: false, message: payload.message });
-  }
-
-  return res.status(payload.status).json({
-    success: true,
-    message: payload.message,
-    requestId: payload.requestId,
-    expiresInSeconds: payload.expiresInSeconds,
-    verified: payload.verified,
-  });
+  return res.status(200).json(
+    new ApiResponse(200, {
+      requestId: payload.requestId,
+      expiresInSeconds: payload.expiresInSeconds,
+      verified: payload.verified,
+    }, payload.message)
+  );
 });

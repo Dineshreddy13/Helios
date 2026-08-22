@@ -1,6 +1,7 @@
 import { and, eq, ilike, ne, or } from "drizzle-orm";
 import { db } from "../../database/db.js";
 import { users } from "../../models/index.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 export const searchUsers = async (query, excludeUserId) => {
     const searchTerm = `%${query}%`;
@@ -21,5 +22,5 @@ export const searchUsers = async (query, excludeUserId) => {
         )
         .limit(10);
 
-    return { status: 200, users: rows };
+    return { users: rows };
 };

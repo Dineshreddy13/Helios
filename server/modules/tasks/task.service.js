@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
+import { ApiError } from "../../utils/ApiError.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,20 +78,20 @@ export const createTask = async (listId, userId, { title, description, assigneeI
         .limit(1);
 
     if (!list) {
-        return { status: 404, message: LIST_MSG.NOT_FOUND };
+        throw new ApiError(404, LIST_MSG.NOT_FOUND);
     }
 
     // 2. verify creator is a project member
     const membership = await getMembership(list.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     // 3. if assigneeId provided, verify assignee is a project member
     if (assigneeId) {
         const assigneeMembership = await getMembership(list.projectId, assigneeId);
         if (!assigneeMembership) {
-            return { status: 422, message: TASK_MSG.ASSIGNEE_NOT_MEMBER };
+            throw new ApiError(422, TASK_MSG.ASSIGNEE_NOT_MEMBER);
         }
     }
 
@@ -137,14 +138,14 @@ export const createTask = async (listId, userId, { title, description, assigneeI
         metadata: { taskTitle: title },
     });
 
-    return { status: 201, message: TASK_MSG.CREATED, task };
+    return { task, message: TASK_MSG.CREATED };
 };
 
 // ── getTasksForProject ─────────────────────────────────────────────────────
 export const getTasksForProject = async (projectId, userId) => {
     const membership = await getMembership(projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const rows = await db
@@ -154,7 +155,7 @@ export const getTasksForProject = async (projectId, userId) => {
         .where(eq(tasks.projectId, projectId))
         .orderBy(asc(tasks.listId), asc(tasks.position));
 
-    return { status: 200, tasks: rows };
+    return { tasks: rows };
 };
 
 // ── updateTask ─────────────────────────────────────────────────────────────
@@ -167,20 +168,20 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: TASK_MSG.NOT_FOUND };
+        throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
     // 2. verify membership
     const membership = await getMembership(existing.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     // 3. if assigneeId provided (and not explicitly set to null), verify assignee is a member
     if (assigneeId) {
         const assigneeMembership = await getMembership(existing.projectId, assigneeId);
         if (!assigneeMembership) {
-            return { status: 422, message: TASK_MSG.ASSIGNEE_NOT_MEMBER };
+            throw new ApiError(422, TASK_MSG.ASSIGNEE_NOT_MEMBER);
         }
     }
 
@@ -221,7 +222,7 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
         metadata: { taskTitle: task.title, changedFields },
     });
 
-    return { status: 200, message: TASK_MSG.UPDATED, task };
+    return { task, message: TASK_MSG.UPDATED };
 };
 
 // ── deleteTask ─────────────────────────────────────────────────────────────
@@ -233,12 +234,12 @@ export const deleteTask = async (taskId, userId) => {
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: TASK_MSG.NOT_FOUND };
+        throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
     const membership = await getMembership(existing.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     // Delete physical files from disk
@@ -263,7 +264,6 @@ export const deleteTask = async (taskId, userId) => {
     });
 
     return {
-        status: 200,
         message: TASK_MSG.DELETED,
         taskId,
         listId: existing.listId,
@@ -281,13 +281,13 @@ export const moveTask = async (taskId, userId, { targetListId, targetPosition })
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: TASK_MSG.NOT_FOUND };
+        throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
     // 2. verify membership
     const membership = await getMembership(existing.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     // 3. verify targetList belongs to the same project
@@ -298,7 +298,7 @@ export const moveTask = async (taskId, userId, { targetListId, targetPosition })
         .limit(1);
 
     if (!targetList || targetList.projectId !== existing.projectId) {
-        return { status: 400, message: TASK_MSG.TARGET_LIST_NOT_IN_PROJECT };
+        throw new ApiError(400, TASK_MSG.TARGET_LIST_NOT_IN_PROJECT);
     }
 
     const sourceListId = existing.listId;
@@ -420,7 +420,6 @@ export const moveTask = async (taskId, userId, { targetListId, targetPosition })
     });
 
     return {
-        status: 200,
         message: TASK_MSG.MOVED,
         task,
         sourceListId,
@@ -437,12 +436,12 @@ export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: TASK_MSG.NOT_FOUND };
+        throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
     const membership = await getMembership(existing.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const currentFiles = Array.isArray(existing.files) ? existing.files : [];
@@ -452,7 +451,7 @@ export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
         for (const f of uploadedFiles) {
             if (fs.existsSync(f.path)) fs.unlinkSync(f.path);
         }
-        return { status: 400, message: TASK_MSG.FILE_LIMIT_EXCEEDED };
+        throw new ApiError(400, TASK_MSG.FILE_LIMIT_EXCEEDED);
     }
 
     const newFileEntries = uploadedFiles.map((f) => ({
@@ -477,7 +476,7 @@ export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
         .where(eq(tasks.id, taskId))
         .limit(1);
 
-    return { status: 200, message: TASK_MSG.FILE_UPLOADED, task };
+    return { task, message: TASK_MSG.FILE_UPLOADED };
 };
 
 // ── deleteTaskFile ─────────────────────────────────────────────────────────
@@ -489,19 +488,19 @@ export const deleteTaskFile = async (taskId, userId, fileId) => {
         .limit(1);
 
     if (!existing) {
-        return { status: 404, message: TASK_MSG.NOT_FOUND };
+        throw new ApiError(404, TASK_MSG.NOT_FOUND);
     }
 
     const membership = await getMembership(existing.projectId, userId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const currentFiles = Array.isArray(existing.files) ? existing.files : [];
     const fileToDelete = currentFiles.find((f) => f.id === fileId);
 
     if (!fileToDelete) {
-        return { status: 404, message: TASK_MSG.FILE_NOT_FOUND };
+        throw new ApiError(404, TASK_MSG.FILE_NOT_FOUND);
     }
 
     // Delete from disk
@@ -524,5 +523,5 @@ export const deleteTaskFile = async (taskId, userId, fileId) => {
         .where(eq(tasks.id, taskId))
         .limit(1);
 
-    return { status: 200, message: TASK_MSG.FILE_DELETED, task };
+    return { task, message: TASK_MSG.FILE_DELETED };
 };

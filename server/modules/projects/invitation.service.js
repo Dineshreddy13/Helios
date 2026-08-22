@@ -8,6 +8,7 @@ import {
     users,
 } from "../../models/index.js";
 import { logActivity } from "../activity/activity.service.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
@@ -30,13 +31,13 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
     // 1. verify inviter is the owner
     const inviterMembership = await getMembership(projectId, inviterId);
     if (!inviterMembership || inviterMembership.role !== "owner") {
-        return { status: 403, message: PROJECT_MSG.NOT_OWNER };
+        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
     }
 
     // 2. verify invitedUser is not already a member
     const existingMember = await getMembership(projectId, invitedUserId);
     if (existingMember) {
-        return { status: 409, message: INVITATION_MSG.ALREADY_MEMBER };
+        throw new ApiError(409, INVITATION_MSG.ALREADY_MEMBER);
     }
 
     // 3. verify no pending invitation already exists
@@ -53,7 +54,7 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
         .limit(1);
 
     if (existingInvitation) {
-        return { status: 409, message: INVITATION_MSG.ALREADY_INVITED };
+        throw new ApiError(409, INVITATION_MSG.ALREADY_INVITED);
     }
 
     // 4. insert invitation
@@ -89,14 +90,14 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
         metadata: { invitedUserName: row.invitedUser.username },
     });
 
-    return { status: 201, message: INVITATION_MSG.SENT, invitation: row };
+    return { invitation: row, message: INVITATION_MSG.SENT };
 };
 
 // ── getProjectInvitations ──────────────────────────────────────────────────
 export const getProjectInvitations = async (projectId, requestingUserId) => {
     const membership = await getMembership(projectId, requestingUserId);
     if (!membership || membership.role !== "owner") {
-        return { status: 403, message: PROJECT_MSG.NOT_OWNER };
+        throw new ApiError(403, PROJECT_MSG.NOT_OWNER);
     }
 
     const rows = await db
@@ -120,7 +121,7 @@ export const getProjectInvitations = async (projectId, requestingUserId) => {
             )
         );
 
-    return { status: 200, invitations: rows };
+    return { invitations: rows };
 };
 
 // ── getMyInvitations ───────────────────────────────────────────────────────
@@ -150,7 +151,7 @@ export const getMyInvitations = async (userId) => {
             )
         );
 
-    return { status: 200, invitations: rows };
+    return { invitations: rows };
 };
 
 // ── respondToInvitation ────────────────────────────────────────────────────
@@ -162,11 +163,11 @@ export const respondToInvitation = async (invitationId, userId, response) => {
         .limit(1);
 
     if (!invitation || invitation.invitedUserId !== userId) {
-        return { status: 404, message: INVITATION_MSG.NOT_FOUND };
+        throw new ApiError(404, INVITATION_MSG.NOT_FOUND);
     }
 
     if (invitation.status !== "pending") {
-        return { status: 409, message: INVITATION_MSG.ALREADY_RESPONDED };
+        throw new ApiError(409, INVITATION_MSG.ALREADY_RESPONDED);
     }
 
     if (response === "accepted") {
@@ -195,7 +196,7 @@ export const respondToInvitation = async (invitationId, userId, response) => {
             return updatedInvitation;
         });
 
-        return { status: 200, message: INVITATION_MSG.ACCEPTED, invitation: updated };
+        return { invitation: updated, message: INVITATION_MSG.ACCEPTED };
     }
 
     // response === "rejected"
@@ -214,14 +215,14 @@ export const respondToInvitation = async (invitationId, userId, response) => {
         metadata: {},
     });
 
-    return { status: 200, message: INVITATION_MSG.REJECTED, invitation: updated };
+    return { invitation: updated, message: INVITATION_MSG.REJECTED };
 };
 
 // ── getProjectMembers ──────────────────────────────────────────────────────
 export const getProjectMembers = async (projectId, requestingUserId) => {
     const membership = await getMembership(projectId, requestingUserId);
     if (!membership) {
-        return { status: 403, message: PROJECT_MSG.NOT_MEMBER };
+        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
     }
 
     const rows = await db
@@ -240,5 +241,5 @@ export const getProjectMembers = async (projectId, requestingUserId) => {
         .innerJoin(users, eq(projectMembers.userId, users.id))
         .where(eq(projectMembers.projectId, projectId));
 
-    return { status: 200, members: rows };
+    return { members: rows };
 };

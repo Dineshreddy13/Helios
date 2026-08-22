@@ -9,6 +9,7 @@ import { db } from "../../database/db.js";
 import { users } from "../../models/index.js";
 import { sendEmail } from "../../shared/services/email.service.js";
 import { MAIL_MSG } from "../../config/constants.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 const COOKIE_NAME = "auth_token";
 const OTP_KEY_PREFIX = "email-verification";
@@ -182,10 +183,9 @@ export const register = async ({ username, email, password }) => {
 
     if (existingUser) {
         if (existingUser.email === normalizedEmail) {
-            return { status: 409, message: AUTH_MSG.EMAIL_EXISTS };
+            throw new ApiError(409, AUTH_MSG.EMAIL_EXISTS);
         }
-
-        return { status: 409, message: AUTH_MSG.USERNAME_TAKEN };
+        throw new ApiError(409, AUTH_MSG.USERNAME_TAKEN);
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -211,14 +211,13 @@ export const register = async ({ username, email, password }) => {
         });
 
         return {
-            status: 201,
             message: AUTH_MSG.CHECK_EMAIL,
             requestId: otpPayload.requestId,
             expiresInSeconds: otpPayload.expiresInSeconds,
         };
     } catch (error) {
         await db.delete(users).where(eq(users.id, user.id));
-        return { status: 500, message: AUTH_MSG.EMAIL_VERIFICATION_SEND_FAILED };
+        throw new ApiError(500, AUTH_MSG.EMAIL_VERIFICATION_SEND_FAILED);
     }
 };
 
@@ -226,11 +225,11 @@ export const verifyOtp = async ({ requestId, otp }) => {
     const record = await readOtp(requestId);
 
     if (!record) {
-        return { status: 400, message: AUTH_MSG.EMAIL_VERIFICATION_REQUEST_INVALID };
+        throw new ApiError(400, AUTH_MSG.EMAIL_VERIFICATION_REQUEST_INVALID);
     }
 
     if (record.otp !== otp) {
-        return { status: 400, message: AUTH_MSG.EMAIL_VERIFICATION_OTP_INVALID };
+        throw new ApiError(400, AUTH_MSG.EMAIL_VERIFICATION_OTP_INVALID);
     }
 
     const [user] = await db
@@ -242,7 +241,7 @@ export const verifyOtp = async ({ requestId, otp }) => {
     if (!user) {
         await clearOtp(requestId);
         await clearOtpMeta(requestId);
-        return { status: 404, message: AUTH_MSG.USER_NOT_FOUND };
+        throw new ApiError(404, AUTH_MSG.USER_NOT_FOUND);
     }
 
     const [updatedUser] = await db
@@ -255,7 +254,6 @@ export const verifyOtp = async ({ requestId, otp }) => {
     await clearOtpMeta(requestId);
 
     return {
-        status: 200,
         message: AUTH_MSG.EMAIL_VERIFICATION_OTP_VERIFIED,
         ...buildAuthResponse(updatedUser),
         user: sanitizeUser(updatedUser),
@@ -266,7 +264,7 @@ export const resendOtp = async ({ requestId }) => {
     const record = await readOtp(requestId);
 
     if (!record) {
-        return { status: 400, message: AUTH_MSG.EMAIL_VERIFICATION_REQUEST_INVALID };
+        throw new ApiError(400, AUTH_MSG.EMAIL_VERIFICATION_REQUEST_INVALID);
     }
 
     const meta = await readOtpMeta(requestId);
@@ -274,11 +272,11 @@ export const resendOtp = async ({ requestId }) => {
     const lastResentAt = meta.lastResentAt ? new Date(meta.lastResentAt).getTime() : 0;
 
     if (lastResentAt && now - lastResentAt < OTP_RESEND_COOLDOWN_SECONDS * 1000) {
-        return { status: 429, message: AUTH_MSG.EMAIL_VERIFICATION_RESEND_TOO_SOON };
+        throw new ApiError(429, AUTH_MSG.EMAIL_VERIFICATION_RESEND_TOO_SOON);
     }
 
     if (meta.resendCount >= OTP_RESEND_MAX_COUNT) {
-        return { status: 429, message: AUTH_MSG.EMAIL_VERIFICATION_RESEND_LIMIT_REACHED };
+        throw new ApiError(429, AUTH_MSG.EMAIL_VERIFICATION_RESEND_LIMIT_REACHED);
     }
 
     const [user] = await db
@@ -289,16 +287,16 @@ export const resendOtp = async ({ requestId }) => {
 
     if (!user) {
         await clearOtp(requestId);
-        return { status: 404, message: AUTH_MSG.USER_NOT_FOUND };
+        throw new ApiError(404, AUTH_MSG.USER_NOT_FOUND);
     }
 
     if (user.provider !== "local") {
-        return { status: 400, message: AUTH_MSG.EMAIL_VERIFICATION_LOCAL_ONLY };
+        throw new ApiError(400, AUTH_MSG.EMAIL_VERIFICATION_LOCAL_ONLY);
     }
 
     if (user.emailVerified) {
         await clearOtp(requestId);
-        return { status: 200, message: AUTH_MSG.EMAIL_ALREADY_VERIFIED, verified: true };
+        return { message: AUTH_MSG.EMAIL_ALREADY_VERIFIED, verified: true };
     }
 
     const otp = generateOtp();
@@ -329,11 +327,10 @@ export const resendOtp = async ({ requestId }) => {
             lastResentAt: new Date().toISOString(),
         });
     } catch (error) {
-        return { status: 500, message: AUTH_MSG.EMAIL_VERIFICATION_RESEND_FAILED };
+        throw new ApiError(500, AUTH_MSG.EMAIL_VERIFICATION_RESEND_FAILED);
     }
 
     return {
-        status: 200,
         message: AUTH_MSG.EMAIL_VERIFICATION_OTP_RESENT,
         requestId,
         expiresInSeconds: OTP_EXPIRY_SECONDS,
@@ -350,35 +347,30 @@ export const login = async ({ email, password }) => {
         .limit(1);
 
     if (!user) {
-        return { status: 401, message: AUTH_MSG.INVALID_CREDENTIALS };
+        throw new ApiError(401, AUTH_MSG.INVALID_CREDENTIALS);
     }
-
-
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-        return { status: 401, message: AUTH_MSG.INVALID_CREDENTIALS };
+        throw new ApiError(401, AUTH_MSG.INVALID_CREDENTIALS);
     }
 
     if (!user.emailVerified) {
-        return { status: 403, message: AUTH_MSG.EMAIL_NOT_VERIFIED };
+        throw new ApiError(403, AUTH_MSG.EMAIL_NOT_VERIFIED);
     }
 
     return {
-        status: 200,
         message: AUTH_MSG.LOGIN_SUCCESS,
         ...buildAuthResponse(user),
     };
 };
 
 export const getCurrentUser = async (user) => ({
-    status: 200,
     user: sanitizeUser(user),
 });
 
 export const logout = async () => ({
-    status: 200,
     message: AUTH_MSG.LOGOUT_SUCCESS,
     cookieName: COOKIE_NAME,
     cookieOptions: {
@@ -386,4 +378,3 @@ export const logout = async () => ({
         maxAge: 0,
     },
 });
-
