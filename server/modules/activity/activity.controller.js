@@ -2,43 +2,36 @@ import {
     getProjectActivity,
     getDashboardActivity,
 } from "./activity.service.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-export const getProjectActivityHandler = async (req, res, next) => {
-    try {
-        const { projectId } = req.params;
-        const limit = parseInt(req.query.limit) || 20;
-        const offset = parseInt(req.query.offset) || 0;
+export const getProjectActivityHandler = asyncHandler(async (req, res, next) => {
+    const { projectId } = req.params;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = parseInt(req.query.offset) || 0;
 
-        const payload = await getProjectActivity(projectId, req.user.id, { limit, offset });
+    const payload = await getProjectActivity(projectId, req.user.id, { limit, offset });
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
-
-        return res.status(payload.status).json({
-            success: true,
-            activities: payload.activities,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
 
-export const getDashboardActivityHandler = async (req, res, next) => {
-    try {
-        const limit = parseInt(req.query.limit) || 30;
+    return res.status(payload.status).json({
+        success: true,
+        activities: payload.activities,
+    });
+});
 
-        const payload = await getDashboardActivity(req.user.id, { limit });
+export const getDashboardActivityHandler = asyncHandler(async (req, res, next) => {
+    const limit = parseInt(req.query.limit) || 30;
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
+    const payload = await getDashboardActivity(req.user.id, { limit });
 
-        return res.status(payload.status).json({
-            success: true,
-            activities: payload.activities,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
+
+    return res.status(payload.status).json({
+        success: true,
+        activities: payload.activities,
+    });
+});

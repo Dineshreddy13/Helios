@@ -8,162 +8,135 @@ import {
     uploadTaskFiles,
 } from "./task.service.js";
 import { getIO } from "../../sockets/index.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-export const createTaskHandler = async (req, res, next) => {
-    try {
-        const { listId } = req.params;
-        const payload = await createTask(listId, req.user.id, req.validated.body);
+export const createTaskHandler = asyncHandler(async (req, res, next) => {
+    const { listId } = req.params;
+    const payload = await createTask(listId, req.user.id, req.validated.body);
 
-        if (payload.status !== 201) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
-
-        getIO().to(`project:${payload.task.projectId}`).emit("task:created", payload.task);
-
-        return res.status(payload.status).json({
-            success: true,
-            message: payload.message,
-            task: payload.task,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 201) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
 
-export const getTasksHandler = async (req, res, next) => {
-    try {
-        const { projectId } = req.params;
-        const payload = await getTasksForProject(projectId, req.user.id);
+    getIO().to(`project:${payload.task.projectId}`).emit("task:created", payload.task);
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
+    return res.status(payload.status).json({
+        success: true,
+        message: payload.message,
+        task: payload.task,
+    });
+});
 
-        return res.status(payload.status).json({
-            success: true,
-            tasks: payload.tasks,
-        });
-    } catch (error) {
-        next(error);
+export const getTasksHandler = asyncHandler(async (req, res, next) => {
+    const { projectId } = req.params;
+    const payload = await getTasksForProject(projectId, req.user.id);
+
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
 
-export const updateTaskHandler = async (req, res, next) => {
-    try {
-        const { taskId } = req.params;
-        const payload = await updateTask(taskId, req.user.id, req.validated.body);
+    return res.status(payload.status).json({
+        success: true,
+        tasks: payload.tasks,
+    });
+});
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
+export const updateTaskHandler = asyncHandler(async (req, res, next) => {
+    const { taskId } = req.params;
+    const payload = await updateTask(taskId, req.user.id, req.validated.body);
 
-        getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
-
-        return res.status(payload.status).json({
-            success: true,
-            message: payload.message,
-            task: payload.task,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
 
-export const deleteTaskHandler = async (req, res, next) => {
-    try {
-        const { taskId } = req.params;
-        const payload = await deleteTask(taskId, req.user.id);
+    getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
+    return res.status(payload.status).json({
+        success: true,
+        message: payload.message,
+        task: payload.task,
+    });
+});
 
-        getIO()
-            .to(`project:${payload.projectId}`)
-            .emit("task:deleted", { taskId: payload.taskId, listId: payload.listId });
+export const deleteTaskHandler = asyncHandler(async (req, res, next) => {
+    const { taskId } = req.params;
+    const payload = await deleteTask(taskId, req.user.id);
 
-        return res.status(payload.status).json({
-            success: true,
-            message: payload.message,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
 
-export const moveTaskHandler = async (req, res, next) => {
-    try {
-        const { taskId } = req.params;
-        const payload = await moveTask(taskId, req.user.id, req.validated.body);
+    getIO()
+        .to(`project:${payload.projectId}`)
+        .emit("task:deleted", { taskId: payload.taskId, listId: payload.listId });
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
+    return res.status(payload.status).json({
+        success: true,
+        message: payload.message,
+    });
+});
 
-        getIO()
-            .to(`project:${payload.task.projectId}`)
-            .emit("task:moved", {
-                task: payload.task,
-                sourceListId: payload.sourceListId,
-                targetListId: payload.targetListId,
-            });
+export const moveTaskHandler = asyncHandler(async (req, res, next) => {
+    const { taskId } = req.params;
+    const payload = await moveTask(taskId, req.user.id, req.validated.body);
 
-        return res.status(payload.status).json({
-            success: true,
-            message: payload.message,
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
+    }
+
+    getIO()
+        .to(`project:${payload.task.projectId}`)
+        .emit("task:moved", {
             task: payload.task,
             sourceListId: payload.sourceListId,
             targetListId: payload.targetListId,
         });
-    } catch (error) {
-        next(error);
+
+    return res.status(payload.status).json({
+        success: true,
+        message: payload.message,
+        task: payload.task,
+        sourceListId: payload.sourceListId,
+        targetListId: payload.targetListId,
+    });
+});
+
+export const uploadTaskFilesHandler = asyncHandler(async (req, res, next) => {
+    const { taskId } = req.params;
+    const files = req.files ?? [];
+
+    if (files.length === 0) {
+        return res.status(400).json({ success: false, message: "No files were uploaded." });
     }
-};
 
-export const uploadTaskFilesHandler = async (req, res, next) => {
-    try {
-        const { taskId } = req.params;
-        const files = req.files ?? [];
+    const payload = await uploadTaskFiles(taskId, req.user.id, files);
 
-        if (files.length === 0) {
-            return res.status(400).json({ success: false, message: "No files were uploaded." });
-        }
-
-        const payload = await uploadTaskFiles(taskId, req.user.id, files);
-
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
-
-        getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
-
-        return res.status(payload.status).json({
-            success: true,
-            message: payload.message,
-            task: payload.task,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
 
-export const deleteTaskFileHandler = async (req, res, next) => {
-    try {
-        const { taskId, fileId } = req.params;
-        const payload = await deleteTaskFile(taskId, req.user.id, fileId);
+    getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
 
-        if (payload.status !== 200) {
-            return res.status(payload.status).json({ success: false, message: payload.message });
-        }
+    return res.status(payload.status).json({
+        success: true,
+        message: payload.message,
+        task: payload.task,
+    });
+});
 
-        getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
+export const deleteTaskFileHandler = asyncHandler(async (req, res, next) => {
+    const { taskId, fileId } = req.params;
+    const payload = await deleteTaskFile(taskId, req.user.id, fileId);
 
-        return res.status(payload.status).json({
-            success: true,
-            message: payload.message,
-            task: payload.task,
-        });
-    } catch (error) {
-        next(error);
+    if (payload.status !== 200) {
+        return res.status(payload.status).json({ success: false, message: payload.message });
     }
-};
+
+    getIO().to(`project:${payload.task.projectId}`).emit("task:updated", payload.task);
+
+    return res.status(payload.status).json({
+        success: true,
+        message: payload.message,
+        task: payload.task,
+    });
+});

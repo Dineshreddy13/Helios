@@ -1,4 +1,5 @@
 import { getCurrentUser, login, logout, register, resendOtp, verifyOtp } from "./auth.service.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 const sendAuthResponse = (res, payload) => {
   const cookiePayload = { httpOnly: true, path: "/" };
@@ -17,91 +18,66 @@ const sendAuthResponse = (res, payload) => {
   });
 };
 
-export const registerUser = async (req, res, next) => {
-  try {
-    const payload = await register(req.validated.body);
+export const registerUser = asyncHandler(async (req, res, next) => {
+  const payload = await register(req.validated.body);
 
-    if (payload.status !== 201) {
-      return res.status(payload.status).json({ success: false, message: payload.message });
-    }
-
-    return res.status(payload.status).json({
-      success: true,
-      message: payload.message,
-      requestId: payload.requestId,
-      expiresInSeconds: payload.expiresInSeconds,
-    });
-  } catch (error) {
-    next(error);
+  if (payload.status !== 201) {
+    return res.status(payload.status).json({ success: false, message: payload.message });
   }
-};
 
-export const loginUser = async (req, res, next) => {
-  try {
-    const payload = await login(req.validated.body);
+  return res.status(payload.status).json({
+    success: true,
+    message: payload.message,
+    requestId: payload.requestId,
+    expiresInSeconds: payload.expiresInSeconds,
+  });
+});
 
-    if (payload.status !== 200) {
-      return res.status(payload.status).json({ success: false, message: payload.message });
-    }
+export const loginUser = asyncHandler(async (req, res, next) => {
+  const payload = await login(req.validated.body);
 
-    return sendAuthResponse(res, payload);
-  } catch (error) {
-    next(error);
+  if (payload.status !== 200) {
+    return res.status(payload.status).json({ success: false, message: payload.message });
   }
-};
 
-export const getMe = async (req, res, next) => {
-  try {
-    const payload = await getCurrentUser(req.user);
-    return res.status(payload.status).json({ success: true, user: payload.user });
-  } catch (error) {
-    next(error);
+  return sendAuthResponse(res, payload);
+});
+
+export const getMe = asyncHandler(async (req, res, next) => {
+  const payload = await getCurrentUser(req.user);
+  return res.status(payload.status).json({ success: true, user: payload.user });
+});
+
+export const logoutUser = asyncHandler(async (req, res, next) => {
+  const payload = await logout();
+
+  res.clearCookie(payload.cookieName, payload.cookieOptions);
+
+  return res.status(payload.status).json({ success: true, message: payload.message });
+});
+
+export const verifyOtpCode = asyncHandler(async (req, res, next) => {
+  const payload = await verifyOtp(req.validated.body);
+
+  if (payload.status !== 200) {
+    return res.status(payload.status).json({ success: false, message: payload.message });
   }
-};
 
-export const logoutUser = async (req, res, next) => {
-  try {
-    const payload = await logout();
+  return sendAuthResponse(res, payload);
+});
 
-    res.clearCookie(payload.cookieName, payload.cookieOptions);
+export const resendOtpCode = asyncHandler(async (req, res, next) => {
+  const payload = await resendOtp(req.validated.body);
 
-    return res.status(payload.status).json({ success: true, message: payload.message });
-  } catch (error) {
-    next(error);
+  if (payload.status !== 200) {
+    return res.status(payload.status).json({ success: false, message: payload.message });
   }
-};
 
-export const verifyOtpCode = async (req, res, next) => {
-  try {
-    const payload = await verifyOtp(req.validated.body);
-
-    if (payload.status !== 200) {
-      return res.status(payload.status).json({ success: false, message: payload.message });
-    }
-
-    return sendAuthResponse(res, payload);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const resendOtpCode = async (req, res, next) => {
-  try {
-    const payload = await resendOtp(req.validated.body);
-
-    if (payload.status !== 200) {
-      return res.status(payload.status).json({ success: false, message: payload.message });
-    }
-
-    return res.status(payload.status).json({
-      success: true,
-      message: payload.message,
-      requestId: payload.requestId,
-      expiresInSeconds: payload.expiresInSeconds,
-      verified: payload.verified,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+  return res.status(payload.status).json({
+    success: true,
+    message: payload.message,
+    requestId: payload.requestId,
+    expiresInSeconds: payload.expiresInSeconds,
+    verified: payload.verified,
+  });
+});

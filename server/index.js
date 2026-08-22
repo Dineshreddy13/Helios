@@ -17,6 +17,7 @@ import discussionRoute from "./modules/discussions/discussion.route.js";
 import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
 import logger from "./utils/logger.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -47,6 +48,7 @@ app.get("/api/health", (req, res) => {
   res.json({ success: true, message: APP_MSG.HEALTH_CHECK_SUCCESS });
 });
 
+app.use(errorHandler);
 
 const start = async () => {
   await connectDB();
