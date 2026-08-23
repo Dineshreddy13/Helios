@@ -3,24 +3,7 @@ import { db } from "../../database/db.js";
 import { discussionMessages, projectMembers, users } from "../../models/index.js";
 import { PROJECT_MSG, DISCUSSION_MSG } from "../../config/constants.js";
 import { ApiError } from "../../utils/ApiError.js";
-
-/**
- * Verify the user is a member of the project.
- */
-const verifyMembership = async (projectId, userId) => {
-    const [membership] = await db
-        .select({ role: projectMembers.role })
-        .from(projectMembers)
-        .where(
-            and(
-                eq(projectMembers.projectId, projectId),
-                eq(projectMembers.userId, userId)
-            )
-        )
-        .limit(1);
-
-    return membership;
-};
+import { requireProjectMember, getMembership } from "../../utils/permissions.js";
 
 /**
  * Build the select columns for a message with sender info.
@@ -44,10 +27,7 @@ const buildMessageSelect = () => ({
  * Cursor-based pagination using createdAt.
  */
 export const getMessages = async (projectId, userId, cursor) => {
-    const membership = await verifyMembership(projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(projectId, userId);
 
     const conditions = [eq(discussionMessages.projectId, projectId)];
 
@@ -75,10 +55,7 @@ export const getMessages = async (projectId, userId, cursor) => {
  * Send a new message in a project discussion.
  */
 export const sendMessage = async (projectId, userId, content) => {
-    const membership = await verifyMembership(projectId, userId);
-    if (!membership) {
-        throw new ApiError(403, PROJECT_MSG.NOT_MEMBER);
-    }
+    await requireProjectMember(projectId, userId);
 
     const [inserted] = await db
         .insert(discussionMessages)
@@ -133,7 +110,7 @@ export const editMessage = async (messageId, userId, content) => {
 };
 
 /**
- * Delete a message (author only).
+ * Delete a message (author or owner).
  */
 export const deleteMessage = async (messageId, userId) => {
     const [existing] = await db
@@ -147,7 +124,10 @@ export const deleteMessage = async (messageId, userId) => {
     }
 
     if (existing.senderId !== userId) {
-        throw new ApiError(403, DISCUSSION_MSG.NOT_AUTHOR);
+        const role = await getMembership(existing.projectId, userId);
+        if (role !== "owner") {
+            throw new ApiError(403, DISCUSSION_MSG.NOT_AUTHOR);
+        }
     }
 
     await db

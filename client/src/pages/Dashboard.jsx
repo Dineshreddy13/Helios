@@ -78,9 +78,9 @@ const Dashboard = () => {
             )}
 
             {/* Project List */}
-            {isLoading && projects.length === 0 ? (
+            {isLoading && (!projects || projects.length === 0) ? (
               <div className="text-center py-12 text-muted-foreground">Loading projects...</div>
-            ) : projects.length === 0 ? (
+            ) : (!projects || projects.length === 0) ? (
               <div className="text-center py-16 border border-dashed border-border rounded-2xl">
                 <h3 className="text-xl font-medium mb-2">No projects yet</h3>
                 <p className="text-muted-foreground mb-6">Create your first project to get started.</p>
@@ -88,7 +88,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {projects.map((project) => (
+                {projects?.map((project) => (
                   <div
                     key={project.id}
                     className="group cursor-pointer rounded-2xl border border-border bg-card p-5 flex flex-col gap-3 hover:border-primary/40 hover:shadow-md transition-all"
@@ -120,15 +120,15 @@ const Dashboard = () => {
               <h2 className="text-base font-semibold tracking-tight">Recent Activity</h2>
             </div>
             <div className="flex-1 overflow-y-auto p-2 lg:p-3">
-              {isActivityLoading && dashboardActivity.length === 0 ? (
+              {isActivityLoading && (!dashboardActivity || dashboardActivity.length === 0) ? (
                 <div className="p-6 text-center text-muted-foreground text-sm flex justify-center items-center h-24">
                   <div className="w-5 h-5 rounded-full border-2 border-border border-t-foreground animate-spin"></div>
                 </div>
-              ) : dashboardActivity.length === 0 ? (
+              ) : (!dashboardActivity || dashboardActivity.length === 0) ? (
                 <div className="p-6 text-center text-muted-foreground text-sm">No recent activity</div>
               ) : (
                 <div className="divide-y divide-border/50">
-                  {dashboardActivity.map((activity) => (
+                  {dashboardActivity?.map((activity) => (
                     <div key={activity.id} className="p-3 hover:bg-muted/50 transition-colors rounded-xl">
                       <p className="text-sm text-muted-foreground leading-snug">
                         {renderActivityMessage(activity)}
