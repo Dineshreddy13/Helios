@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, text, timestamp, uuid, index, boolean } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
 import { lists } from "./list.model.js";
 import { projects } from "./project.model.js";
@@ -21,6 +21,8 @@ export const tasks = pgTable("tasks", {
   assigneeId: uuid("assignee_id").references(() => users.id, {
     onDelete: "set null",
   }),
+  reminderAt: timestamp("reminder_at", { withTimezone: true }),
+  reminderSent: boolean("reminder_sent").notNull().default(false),
   createdById: uuid("created_by_id")
     .notNull()
     .references(() => users.id),

@@ -10,6 +10,7 @@ import { connectDB } from "./database/db.js";
 import apiRoutes from "./routes/index.js";
 import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
+import "./jobs/workers/reminder.worker.js";
 import logger from "./utils/logger.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 

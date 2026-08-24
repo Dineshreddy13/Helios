@@ -50,6 +50,13 @@
       "when": 1787394287531,
       "tag": "0006_tidy_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787451144587,
+      "tag": "0007_keen_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }

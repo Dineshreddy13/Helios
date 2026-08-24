@@ -24,6 +24,12 @@ const dueDateSchema = z
   .nullable()
   .optional();
 
+const reminderAtSchema = z
+  .string()
+  .datetime({ offset: true, message: "Invalid reminder date format" })
+  .nullable()
+  .optional();
+
 export const createTaskSchema = z.object({
   title: titleSchema,
   description: z
@@ -39,6 +45,15 @@ export const createTaskSchema = z.object({
   status: statusSchema,
   tags: tagsSchema,
   dueDate: dueDateSchema,
+  reminderAt: reminderAtSchema,
+}).refine((data) => {
+  if (data.reminderAt && data.dueDate) {
+    return new Date(data.reminderAt) <= new Date(data.dueDate);
+  }
+  return true;
+}, {
+  message: "Reminder cannot be set after the task deadline",
+  path: ["reminderAt"],
 });
 
 export const updateTaskSchema = z
@@ -57,9 +72,19 @@ export const updateTaskSchema = z
     status: statusSchema,
     tags: tagsSchema,
     dueDate: dueDateSchema,
+    reminderAt: reminderAtSchema,
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: VALIDATION_MSG.AT_LEAST_ONE_FIELD,
+  })
+  .refine((data) => {
+    if (data.reminderAt && data.dueDate) {
+      return new Date(data.reminderAt) <= new Date(data.dueDate);
+    }
+    return true;
+  }, {
+    message: "Reminder cannot be set after the task deadline",
+    path: ["reminderAt"],
   });
 
 export const moveTaskSchema = z.object({

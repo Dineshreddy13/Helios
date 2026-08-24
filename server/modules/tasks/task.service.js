@@ -9,6 +9,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { getCache, setCache, delCache } from "../../utils/cache.js";
 import { getMembership, requireProjectMember } from "../../utils/permissions.js";
 import { deleteFile, deleteFiles } from "../../utils/storage.js";
+import { reminderQueue } from "../../jobs/queues/reminder.queue.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,8 @@ const buildTaskSelect = () => ({
     status: tasks.status,
     tags: tasks.tags,
     dueDate: tasks.dueDate,
+    reminderAt: tasks.reminderAt,
+    reminderSent: tasks.reminderSent,
     files: tasks.files,
     position: tasks.position,
     createdById: tasks.createdById,
@@ -57,7 +60,7 @@ const reindexList = async (tx, listId) => {
 };
 
 // ── createTask ─────────────────────────────────────────────────────────────
-export const createTask = async (listId, userId, { title, description, assigneeId, status, tags, dueDate }) => {
+export const createTask = async (listId, userId, { title, description, assigneeId, status, tags, dueDate, reminderAt }) => {
     // 1. fetch the list to get projectId
     const [list] = await db
         .select()
@@ -99,6 +102,8 @@ export const createTask = async (listId, userId, { title, description, assigneeI
             status: status ?? "pending",
             tags: tags ?? null,
             dueDate: dueDate ? new Date(dueDate) : null,
+            reminderAt: reminderAt ? new Date(reminderAt) : null,
+            reminderSent: false,
             files: null,
             position,
             assigneeId: assigneeId ?? null,
@@ -122,6 +127,21 @@ export const createTask = async (listId, userId, { title, description, assigneeI
         targetId: inserted.id,
         metadata: { taskTitle: title },
     });
+
+    if (reminderAt) {
+        const reminderDate = new Date(reminderAt);
+        const delay = reminderDate.getTime() - Date.now();
+        if (delay > 0) {
+            await reminderQueue.add(
+                "task-reminder",
+                { taskId: inserted.id },
+                {
+                    delay,
+                    jobId: `reminder-${inserted.id}-${reminderDate.getTime()}`,
+                }
+            );
+        }
+    }
 
     await delCache(`tasks:project:${list.projectId}`);
 
@@ -150,7 +170,7 @@ export const getTasksForProject = async (projectId, userId) => {
 };
 
 // ── updateTask ─────────────────────────────────────────────────────────────
-export const updateTask = async (taskId, userId, { title, description, assigneeId, status, tags, dueDate }) => {
+export const updateTask = async (taskId, userId, { title, description, assigneeId, status, tags, dueDate, reminderAt }) => {
     // 1. fetch task
     const [existing] = await db
         .select()
@@ -181,6 +201,10 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     if (status !== undefined) patch.status = status;
     if (tags !== undefined) patch.tags = tags;
     if (dueDate !== undefined) patch.dueDate = dueDate !== null ? new Date(dueDate) : null;
+    if (reminderAt !== undefined) {
+        patch.reminderAt = reminderAt !== null ? new Date(reminderAt) : null;
+        patch.reminderSent = false;
+    }
 
     await db.update(tasks).set(patch).where(eq(tasks.id, taskId));
 
@@ -200,6 +224,7 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     if (status !== undefined && status !== existing.status) changedFields.push("status");
     if (tags !== undefined) changedFields.push("tags");
     if (dueDate !== undefined) changedFields.push("dueDate");
+    if (reminderAt !== undefined) changedFields.push("reminderAt");
 
     await logActivity({
         projectId: existing.projectId,
@@ -209,6 +234,21 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
         targetId: taskId,
         metadata: { taskTitle: task.title, changedFields },
     });
+
+    if (reminderAt !== undefined && reminderAt !== null) {
+        const reminderDate = new Date(reminderAt);
+        const delay = reminderDate.getTime() - Date.now();
+        if (delay > 0) {
+            await reminderQueue.add(
+                "task-reminder",
+                { taskId: existing.id },
+                {
+                    delay,
+                    jobId: `reminder-${existing.id}-${reminderDate.getTime()}`,
+                }
+            );
+        }
+    }
 
     await delCache(`tasks:project:${existing.projectId}`);
 

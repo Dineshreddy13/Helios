@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight, FileCodeIcon, XIcon, CheckCircle2, Circle, Upload, Calendar as CalendarIcon, Tag, User, FileIcon } from 'lucide-react';
+import { ChevronRight, FileCodeIcon, XIcon, CheckCircle2, Circle, Upload, Calendar as CalendarIcon, Tag, User, FileIcon, Bell, ChevronDownIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import useProjectStore from '../store/projectStore';
@@ -22,6 +23,11 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 const TaskPage = () => {
   const { projectId, taskId } = useParams();
@@ -39,9 +45,15 @@ const TaskPage = () => {
   const [fileToDelete, setFileToDelete] = useState(null);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
 
+  const [reminderDate, setReminderDate] = useState(undefined);
+  const [reminderTime, setReminderTime] = useState("10:30");
+  const [openDatePopover, setOpenDatePopover] = useState(false);
+  const [openReminder, setOpenReminder] = useState(false);
+  const [isSavingReminder, setIsSavingReminder] = useState(false);
+
   useEffect(() => {
     fetchProjectById(projectId);
-    
+
     fetchLists(projectId).then(() => {
       setupListSockets(projectId);
     });
@@ -79,6 +91,19 @@ const TaskPage = () => {
     }
   }, [task?.description, isDescDirty]);
 
+  useEffect(() => {
+    if (task) {
+      if (task.reminderAt) {
+        const d = new Date(task.reminderAt);
+        setReminderDate(d);
+        setReminderTime(d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }));
+      } else {
+        setReminderDate(undefined);
+        setReminderTime("10:30");
+      }
+    }
+  }, [task?.reminderAt, openReminder]);
+
   const toggleStatus = async () => {
     if (!task) return;
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
@@ -88,7 +113,7 @@ const TaskPage = () => {
   const handleFileUpload = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
+
     setIsUploading(true);
     setUploadError(null);
     try {
@@ -137,6 +162,30 @@ const TaskPage = () => {
     }
   };
 
+  const handleSaveReminder = async () => {
+    setIsSavingReminder(true);
+    try {
+      let finalIso = null;
+      if (reminderDate) {
+        const [hours, minutes, seconds] = reminderTime.split(':');
+        const newDate = new Date(reminderDate);
+        newDate.setHours(parseInt(hours || 0, 10));
+        newDate.setMinutes(parseInt(minutes || 0, 10));
+        newDate.setSeconds(parseInt(seconds || 0, 10));
+        finalIso = newDate.toISOString();
+      }
+
+      await updateTask(task.id, {
+        reminderAt: finalIso,
+      });
+      setOpenReminder(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingReminder(false);
+    }
+  };
+
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   if (!task) {
@@ -161,14 +210,14 @@ const TaskPage = () => {
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="space-y-3">
               <h1 className="text-3xl font-bold tracking-tight">{task.title}</h1>
-              
+
               {/* Assignee & Tags */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <User className="w-4 h-4" />
                   <span className="font-medium text-foreground">{task.assignee ? task.assignee.username : 'Unassigned'}</span>
                 </div>
-                
+
                 {task.tags && task.tags.length > 0 && (
                   <div className="flex items-center gap-1.5">
                     <Tag className="w-4 h-4" />
@@ -181,10 +230,85 @@ const TaskPage = () => {
                     </div>
                   </div>
                 )}
+
+                <Dialog open={openReminder} onOpenChange={setOpenReminder}>
+                  <DialogTrigger asChild>
+                    <button className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium hover:bg-muted transition-colors border border-transparent hover:border-border">
+                      <Bell className={cn("w-4 h-4", task.reminderAt ? "text-orange-500" : "text-muted-foreground")} />
+                      <span className={cn("font-medium", task.reminderAt ? "text-foreground" : "text-muted-foreground")}>
+                        {task.reminderAt ? `Reminder: ${format(new Date(task.reminderAt), "PP p")}` : 'Set Reminder'}
+                      </span>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Set Reminder</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 flex flex-col items-center">
+                      <FieldGroup className="flex flex-row gap-4 w-full justify-center items-end">
+                        <Field>
+                          <FieldLabel htmlFor="date-picker-optional">Date</FieldLabel>
+                          <Popover open={openDatePopover} onOpenChange={setOpenDatePopover}>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" id="date-picker-optional" className="w-[200px] justify-between font-normal">
+                                {reminderDate ? format(reminderDate, "PPP") : "Select date"}
+                                <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={reminderDate}
+                                captionLayout="dropdown"
+                                defaultMonth={reminderDate}
+                                onSelect={(date) => {
+                                  setReminderDate(date);
+                                  setOpenDatePopover(false);
+                                }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </Field>
+                        <Field className="w-32">
+                          <FieldLabel htmlFor="time-picker-optional">Time</FieldLabel>
+                          <Input
+                            type="time"
+                            id="time-picker-optional"
+                            value={reminderTime}
+                            onChange={(e) => setReminderTime(e.target.value)}
+                            className="font-normal text-foreground appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                          />
+                        </Field>
+                      </FieldGroup>
+                    </div>
+
+                    <DialogFooter className="flex justify-between items-center sm:justify-between w-full pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setReminderDate(undefined);
+                          setReminderTime("10:30");
+                        }}
+                        disabled={isSavingReminder || !reminderDate}
+                      >
+                        Clear
+                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setOpenReminder(false)}>
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={handleSaveReminder} disabled={isSavingReminder}>
+                          {isSavingReminder ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-            
-            <Button 
+
+            <Button
               variant={task.status === 'completed' ? 'outline' : 'default'}
               className="shrink-0"
               onClick={toggleStatus}
@@ -214,7 +338,7 @@ const TaskPage = () => {
                   </Button>
                 )}
               </div>
-              <Textarea 
+              <Textarea
                 value={descInput}
                 onChange={(e) => {
                   setDescInput(e.target.value);
@@ -249,9 +373,9 @@ const TaskPage = () => {
                         const isDeadline = task.dueDate && day.date.toDateString() === new Date(task.dueDate).toDateString();
 
                         return (
-                          <CalendarDayButton 
-                            day={day} 
-                            modifiers={modifiers} 
+                          <CalendarDayButton
+                            day={day}
+                            modifiers={modifiers}
                             {...props}
                             className={`${props.className || ''} ${isDeadline ? '!bg-destructive !text-destructive-foreground hover:!bg-destructive/90' : ''}`}
                           >
@@ -279,8 +403,8 @@ const TaskPage = () => {
                   onChange={handleFileUpload}
                   disabled={isUploading || (task.files?.length >= 5)}
                 />
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   disabled={isUploading || (task.files?.length >= 5)}
                   onClick={() => fileInputRef.current?.click()}
@@ -306,7 +430,7 @@ const TaskPage = () => {
                 <AttachmentGroup>
                   {task.files.filter(f => f.mimeType.startsWith('image/')).map((file) => {
                     const fileUrl = `${apiUrl}${file.url}`;
-                    
+
                     return (
                       <Attachment key={file.id} orientation="vertical">
                         <AttachmentMedia variant="image">
@@ -347,7 +471,7 @@ const TaskPage = () => {
                   </AttachmentActions>
                 </Attachment>
               ))}
-              
+
               {isUploading && (
                 <Attachment className="w-full sm:max-w-md">
                   <AttachmentMedia>
@@ -371,7 +495,7 @@ const TaskPage = () => {
 
         </div>
       </div>
-      
+
       <ConfirmDialog
         isOpen={!!fileToDelete}
         title="Delete Attachment"
