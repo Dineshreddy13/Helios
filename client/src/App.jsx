@@ -16,6 +16,7 @@ import Talk from './pages/Talk';
 import Settings from './pages/Settings';
 import CreateProject from './pages/CreateProject';
 import TaskPage from './pages/TaskPage';
+import ProjectCalendar from './pages/ProjectCalendar';
 
 const AppRoutes = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -106,6 +107,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Project />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:projectId/calendar"
+        element={
+          <ProtectedRoute>
+            <ProjectCalendar />
           </ProtectedRoute>
         }
       />

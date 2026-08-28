@@ -137,3 +137,44 @@
     @apply font-sans;
   }
 }
+
+/* React Big Calendar Overrides */
+.helios-calendar {
+  @apply font-sans text-sm;
+}
+.helios-calendar .rbc-month-view,
+.helios-calendar .rbc-time-view {
+  @apply border-border bg-card text-foreground overflow-hidden rounded-md shadow-sm;
+}
+.helios-calendar .rbc-header {
+  @apply border-border py-2 text-muted-foreground font-medium text-xs;
+}
+.helios-calendar .rbc-day-bg {
+  @apply border-border transition-colors;
+}
+.helios-calendar .rbc-day-bg + .rbc-day-bg,
+.helios-calendar .rbc-month-row + .rbc-month-row {
+  @apply border-border;
+}
+.helios-calendar .rbc-off-range-bg {
+  @apply bg-muted/20;
+}
+.helios-calendar .rbc-today {
+  @apply bg-primary/5;
+}
+.helios-calendar .rbc-event {
+  @apply p-0 bg-transparent;
+}
+.helios-calendar .rbc-time-header.rbc-overflowing {
+  @apply border-border;
+}
+.helios-calendar .rbc-timeslot-group,
+.helios-calendar .rbc-time-content {
+  @apply border-border;
+}
+.helios-calendar .rbc-toolbar button {
+  @apply text-foreground border-border hover:bg-muted active:bg-muted/80 shadow-sm transition-colors rounded-md px-3 py-1 text-sm;
+}
+.helios-calendar .rbc-toolbar button.rbc-active {
+  @apply bg-primary/10 text-primary border-primary/20 shadow-none;
+}

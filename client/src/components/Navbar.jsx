@@ -328,6 +328,9 @@ const Navbar = () => {
             <Link to={`/projects/${currentProject.id}`} className={getProjectLinkClass(`/projects/${currentProject.id}`)}>
               Overview
             </Link>
+            <Link to={`/projects/${currentProject.id}/calendar`} className={getProjectLinkClass(`/projects/${currentProject.id}/calendar`)}>
+              Calendar
+            </Link>
             <Link to={`/projects/${currentProject.id}/discuss`} className={getProjectLinkClass(`/projects/${currentProject.id}/discuss`)}>
               Discuss
             </Link>
