@@ -6,7 +6,10 @@ import { DB_MSG } from "../config/constants.js";
 import logger from "../utils/logger.js";
 
 const { Pool } = pg;
-const pool = new Pool({ connectionString: DATABASE_URL });
+const pool = new Pool({ 
+  connectionString: DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+});
 
 export const db = drizzle(pool, { schema });
 
