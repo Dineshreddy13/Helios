@@ -15,6 +15,7 @@ import logger from "./utils/logger.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy (Render load balancer)
 const httpServer = http.createServer(app);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
