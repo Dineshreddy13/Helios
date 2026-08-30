@@ -44,6 +44,8 @@ const TaskPage = () => {
   const [isDescDirty, setIsDescDirty] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
+  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const [reminderDate, setReminderDate] = useState(undefined);
   const [reminderTime, setReminderTime] = useState("10:30");
@@ -104,10 +106,24 @@ const TaskPage = () => {
     }
   }, [task?.reminderAt, openReminder]);
 
-  const toggleStatus = async () => {
+  const confirmToggleStatus = async () => {
     if (!task) return;
-    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-    await updateTask(task.id, { status: newStatus });
+    setIsUpdatingStatus(true);
+    try {
+      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+      await updateTask(task.id, { status: newStatus });
+    } finally {
+      setIsUpdatingStatus(false);
+      setShowConfirmComplete(false);
+    }
+  };
+
+  const handleStatusClick = () => {
+    if (task?.status !== 'completed') {
+      setShowConfirmComplete(true);
+    } else {
+      confirmToggleStatus();
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -311,7 +327,7 @@ const TaskPage = () => {
             <Button
               variant={task.status === 'completed' ? 'outline' : 'default'}
               className="shrink-0"
-              onClick={toggleStatus}
+              onClick={handleStatusClick}
             >
               {task.status === 'completed' ? (
                 <>
@@ -506,6 +522,17 @@ const TaskPage = () => {
         isLoading={isDeletingFile}
         onConfirm={confirmDeleteFile}
         onCancel={() => setFileToDelete(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={showConfirmComplete}
+        title="Mark Task as Complete"
+        description="Are you sure you want to mark this task as complete?"
+        confirmText="Complete Task"
+        cancelText="Cancel"
+        isLoading={isUpdatingStatus}
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setShowConfirmComplete(false)}
       />
     </>
   );

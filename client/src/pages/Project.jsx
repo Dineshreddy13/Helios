@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import { Button } from '@/components/ui/button';
 import { Calendar, CalendarDayButton } from '@/components/ui/calendar';
-import Badge from '../components/Badge';
+import { Badge } from '@/components/ui/badge';
 import Navbar from '../components/Navbar';
 import ProjectMembers from '../components/ProjectMembers';
 import ProjectReadme from '../components/ProjectReadme';
@@ -89,7 +89,7 @@ const Project = () => {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold tracking-tight">{currentProject.name}</h1>
-                  <Badge variant={currentProject.role}>
+                  <Badge variant={currentProject.role === 'owner' ? 'default' : 'secondary'} className="capitalize">
                     {currentProject.role}
                   </Badge>
                 </div>

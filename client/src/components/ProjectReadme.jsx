@@ -34,29 +34,37 @@ const ProjectReadme = ({ projectId, isOwner, initialReadme }) => {
     return null;
   }
 
+  if (!initialReadme && isOwner && !isEditing) {
+    return (
+      <div className="mt-8 flex justify-center border border-dashed border-border/60 rounded-xl p-8 bg-card/20 hover:bg-card/50 transition-colors">
+        <Button variant="outline" onClick={() => setIsEditing(true)} className="gap-2 text-muted-foreground hover:text-foreground">
+          <Pencil className="w-4 h-4" /> Add README
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="mt-8 rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h3 className="text-base font-semibold tracking-tight">README</h3>
-          {isOwner && (
-            <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} title="Edit Readme">
-              <Pencil className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-            </Button>
-          )}
-        </div>
-        <div className="p-6">
-          <div className="prose prose-neutral dark:prose-invert prose-sm max-w-none">
-            {initialReadme ? (
+      {initialReadme && (
+        <div className="mt-8 rounded-xl border border-border bg-card">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h3 className="text-base font-semibold tracking-tight">README</h3>
+            {isOwner && (
+              <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} title="Edit Readme">
+                <Pencil className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+              </Button>
+            )}
+          </div>
+          <div className="p-6">
+            <div className="prose prose-neutral dark:prose-invert prose-sm max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {initialReadme}
               </ReactMarkdown>
-            ) : (
-              <p className="text-muted-foreground italic">No readme added yet. Click 'Edit Readme' to create one.</p>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {isEditing && (
         <div className="fixed inset-0 z-50 bg-background flex flex-col animate-in fade-in duration-200">

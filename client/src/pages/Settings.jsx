@@ -11,6 +11,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item"
+import InvitePeople from '../components/InvitePeople';
 
 const Settings = () => {
   const { projectId } = useParams();
@@ -84,11 +85,14 @@ const Settings = () => {
               </div>
             )}
 
-            {/* Danger Zone */}
+            {/* Owner Section */}
             {currentProject.role === 'owner' && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-red-500">Danger Zone</h3>
-                <div className="flex w-full flex-col gap-6">
+              <div className="flex flex-col gap-12">
+                <InvitePeople projectId={currentProject.id} />
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-red-500">Danger Zone</h3>
+                  <div className="flex w-full flex-col gap-6">
                   <Item variant="outline" className="border-red-500/30 bg-red-500/5">
                     <ItemContent>
                       <ItemTitle className="text-red-500">Delete Project</ItemTitle>
@@ -103,6 +107,7 @@ const Settings = () => {
                     </ItemActions>
                   </Item>
                 </div>
+              </div>
               </div>
             )}
 

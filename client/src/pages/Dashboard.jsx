@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import useActivityStore from '../store/activityStore';
 import Navbar from '../components/Navbar';
-import Badge from '../components/Badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatRelativeTime } from '../utils/date';
 
@@ -98,7 +98,7 @@ const Dashboard = () => {
                       <h3 className="text-base font-semibold line-clamp-1 group-hover:text-primary transition-colors">
                         {project.name}
                       </h3>
-                      <Badge variant={project.role}>{project.role}</Badge>
+                      <Badge variant={project.role === 'owner' ? 'default' : 'secondary'} className="capitalize">{project.role}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
                       {project.description || 'No description provided.'}

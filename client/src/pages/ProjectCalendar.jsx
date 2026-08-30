@@ -8,7 +8,6 @@ import useProjectStore from '../store/projectStore';
 import useListStore from '../store/listStore';
 import useTaskStore from '../store/taskStore';
 import Navbar from '../components/Navbar';
-import Badge from '../components/Badge';
 
 const locales = {
   'en-US': enUS,
