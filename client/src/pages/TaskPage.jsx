@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight, FileCodeIcon, XIcon, CheckCircle2, Circle, Upload, Calendar as CalendarIcon, Tag, User, FileIcon, Bell, ChevronDownIcon } from 'lucide-react';
+import { ArrowRight01Icon, File02Icon, Cancel01Icon, CheckmarkCircle02Icon, CircleIcon, Upload01Icon, Calendar01Icon, Tag01Icon, UserIcon, File01Icon, Notification01Icon, ArrowDown01Icon } from 'hugeicons-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import Navbar from '../components/Navbar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import useProjectStore from '../store/projectStore';
 import useListStore from '../store/listStore';
@@ -29,6 +28,48 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 
+const TaskDescriptionEditor = ({ task, updateTask }) => {
+  const [descInput, setDescInput] = useState(task?.description || '');
+  const [isDescDirty, setIsDescDirty] = useState(false);
+
+  useEffect(() => {
+    if (task && !isDescDirty) {
+      setDescInput(task.description || '');
+    }
+  }, [task?.description, isDescDirty]);
+
+  const handleSaveDescription = async () => {
+    try {
+      await updateTask(task.id, { description: descInput.trim() });
+      setIsDescDirty(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="space-y-4 flex-1">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Description</h2>
+        {isDescDirty && (
+          <Button size="sm" onClick={handleSaveDescription}>
+            Save changes
+          </Button>
+        )}
+      </div>
+      <Textarea
+        value={descInput}
+        onChange={(e) => {
+          setDescInput(e.target.value);
+          setIsDescDirty(true);
+        }}
+        placeholder="Add a more detailed description..."
+        className="min-h-[250px] resize-y bg-card/50"
+      />
+    </div>
+  );
+};
+
 const TaskPage = () => {
   const { projectId, taskId } = useParams();
   const navigate = useNavigate();
@@ -39,9 +80,6 @@ const TaskPage = () => {
 
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
-  const [descInput, setDescInput] = useState('');
-  const [isDescDirty, setIsDescDirty] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(null);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
   const [showConfirmComplete, setShowConfirmComplete] = useState(false);
@@ -88,12 +126,6 @@ const TaskPage = () => {
   }, [tasksByListId, lists, taskId]);
 
   useEffect(() => {
-    if (task && !isDescDirty) {
-      setDescInput(task.description || '');
-    }
-  }, [task?.description, isDescDirty]);
-
-  useEffect(() => {
     if (task) {
       if (task.reminderAt) {
         const d = new Date(task.reminderAt);
@@ -131,12 +163,10 @@ const TaskPage = () => {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    setUploadError(null);
     try {
       await uploadTaskFiles(task.id, files);
     } catch (err) {
       console.error(err);
-      setUploadError(err.response?.data?.message || err.message || 'Failed to upload files.');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -154,7 +184,6 @@ const TaskPage = () => {
       await deleteTaskFile(task.id, fileToDelete);
     } catch (err) {
       console.error(err);
-      setUploadError(err.response?.data?.message || err.message || 'Failed to delete file.');
     } finally {
       setIsDeletingFile(false);
       setFileToDelete(null);
@@ -167,15 +196,6 @@ const TaskPage = () => {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const handleSaveDescription = async () => {
-    try {
-      await updateTask(task.id, { description: descInput.trim() });
-      setIsDescDirty(false);
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   const handleSaveReminder = async () => {
@@ -207,7 +227,6 @@ const TaskPage = () => {
   if (!task) {
     return (
       <>
-        <Navbar />
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-65px)] w-full text-muted-foreground">
           <Spinner className="w-8 h-8 mb-4" />
           <p>Loading task...</p>
@@ -218,7 +237,6 @@ const TaskPage = () => {
 
   return (
     <>
-      <Navbar />
       <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
         <div className="w-full max-w-4xl space-y-8">
 
@@ -230,13 +248,13 @@ const TaskPage = () => {
               {/* Assignee & Tags */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  <User className="w-4 h-4" />
+                  <UserIcon className="w-4 h-4" />
                   <span className="font-medium text-foreground">{task.assignee ? task.assignee.username : 'Unassigned'}</span>
                 </div>
 
                 {task.tags && task.tags.length > 0 && (
                   <div className="flex items-center gap-1.5">
-                    <Tag className="w-4 h-4" />
+                    <Tag01Icon className="w-4 h-4" />
                     <div className="flex flex-wrap gap-1.5">
                       {task.tags.map(tag => (
                         <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/25">
@@ -250,7 +268,7 @@ const TaskPage = () => {
                 <Dialog open={openReminder} onOpenChange={setOpenReminder}>
                   <DialogTrigger asChild>
                     <button className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium hover:bg-muted transition-colors border border-transparent hover:border-border">
-                      <Bell className={cn("w-4 h-4", task.reminderAt ? "text-orange-500" : "text-muted-foreground")} />
+                      <Notification01Icon className={cn("w-4 h-4", task.reminderAt ? "text-orange-500" : "text-muted-foreground")} />
                       <span className={cn("font-medium", task.reminderAt ? "text-foreground" : "text-muted-foreground")}>
                         {task.reminderAt ? `Reminder: ${format(new Date(task.reminderAt), "PP p")}` : 'Set Reminder'}
                       </span>
@@ -268,7 +286,7 @@ const TaskPage = () => {
                             <PopoverTrigger asChild>
                               <Button variant="outline" id="date-picker-optional" className="w-[200px] justify-between font-normal">
                                 {reminderDate ? format(reminderDate, "PPP") : "Select date"}
-                                <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
+                                <ArrowDown01Icon className="ml-2 h-4 w-4 opacity-50" />
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -331,12 +349,12 @@ const TaskPage = () => {
             >
               {task.status === 'completed' ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />
+                  <CheckmarkCircle02Icon className="w-4 h-4 mr-2 text-green-500" />
                   Completed
                 </>
               ) : (
                 <>
-                  <Circle className="w-4 h-4 mr-2" />
+                  <CircleIcon className="w-4 h-4 mr-2" />
                   Mark as Complete
                 </>
               )}
@@ -345,25 +363,7 @@ const TaskPage = () => {
 
           <div className="flex flex-col md:flex-row gap-8 justify-between">
             {/* Description Section */}
-            <div className="space-y-4 flex-1">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Description</h2>
-                {isDescDirty && (
-                  <Button size="sm" onClick={handleSaveDescription}>
-                    Save changes
-                  </Button>
-                )}
-              </div>
-              <Textarea
-                value={descInput}
-                onChange={(e) => {
-                  setDescInput(e.target.value);
-                  setIsDescDirty(true);
-                }}
-                placeholder="Add a more detailed description..."
-                className="min-h-[250px] resize-y bg-card/50"
-              />
-            </div>
+            <TaskDescriptionEditor task={task} updateTask={updateTask} />
 
             {/* Calendar Section */}
             <div className="space-y-4 flex-none md:flex md:flex-col md:items-end">
@@ -425,17 +425,11 @@ const TaskPage = () => {
                   disabled={isUploading || (task.files?.length >= 5)}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload01Icon className="w-4 h-4 mr-2" />
                   Upload Files
                 </Button>
               </div>
             </div>
-
-            {uploadError && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg">
-                {uploadError}
-              </div>
-            )}
 
             {task.files && task.files.length >= 5 && (
               <p className="text-xs text-amber-500">Maximum file limit (5) reached.</p>
@@ -460,7 +454,7 @@ const TaskPage = () => {
                         </AttachmentContent>
                         <AttachmentActions>
                           <AttachmentAction aria-label="Remove attachment" onClick={() => handleDeleteFile(file.id)}>
-                            <XIcon className="w-4 h-4" />
+                            <Cancel01Icon className="w-4 h-4" />
                           </AttachmentAction>
                         </AttachmentActions>
                       </Attachment>
@@ -472,7 +466,7 @@ const TaskPage = () => {
               {task.files?.filter(f => !f.mimeType.startsWith('image/')).map((file) => (
                 <Attachment key={file.id} className="w-full sm:max-w-md">
                   <AttachmentMedia>
-                    <FileCodeIcon className="w-5 h-5 text-muted-foreground" />
+                    <File02Icon className="w-5 h-5 text-muted-foreground" />
                   </AttachmentMedia>
                   <AttachmentContent>
                     <AttachmentTitle>{file.name}</AttachmentTitle>
@@ -482,7 +476,7 @@ const TaskPage = () => {
                   </AttachmentContent>
                   <AttachmentActions>
                     <AttachmentAction aria-label="Remove attachment" onClick={() => handleDeleteFile(file.id)}>
-                      <XIcon className="w-4 h-4" />
+                      <Cancel01Icon className="w-4 h-4" />
                     </AttachmentAction>
                   </AttachmentActions>
                 </Attachment>
@@ -502,7 +496,7 @@ const TaskPage = () => {
 
               {(!task.files || task.files.length === 0) && !isUploading && (
                 <div className="text-center py-12 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
-                  <FileIcon className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                  <File01Icon className="w-8 h-8 mx-auto mb-3 opacity-20" />
                   <p className="text-sm">No attachments yet.</p>
                 </div>
               )}

@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import useProjectStore from '../store/projectStore';
-import { Pencil, Eye, Edit2 } from 'lucide-react';
+import { Edit02Icon, ViewIcon } from 'hugeicons-react';
 
 const ProjectReadme = ({ projectId, isOwner, initialReadme }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -38,7 +38,7 @@ const ProjectReadme = ({ projectId, isOwner, initialReadme }) => {
     return (
       <div className="mt-8 flex justify-center border border-dashed border-border/60 rounded-xl p-8 bg-card/20 hover:bg-card/50 transition-colors">
         <Button variant="outline" onClick={() => setIsEditing(true)} className="gap-2 text-muted-foreground hover:text-foreground">
-          <Pencil className="w-4 h-4" /> Add README
+          <Edit02Icon className="w-4 h-4" /> Add README
         </Button>
       </div>
     );
@@ -52,7 +52,7 @@ const ProjectReadme = ({ projectId, isOwner, initialReadme }) => {
             <h3 className="text-base font-semibold tracking-tight">README</h3>
             {isOwner && (
               <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)} title="Edit Readme">
-                <Pencil className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                <Edit02Icon className="w-4 h-4 text-muted-foreground hover:text-foreground" />
               </Button>
             )}
           </div>
@@ -79,9 +79,9 @@ const ProjectReadme = ({ projectId, isOwner, initialReadme }) => {
                 onClick={() => setActiveTab(activeTab === 'edit' ? 'preview' : 'edit')}
               >
                 {activeTab === 'edit' ? (
-                  <><Eye className="w-4 h-4" /> Preview</>
+                  <><ViewIcon className="w-4 h-4" /> Preview</>
                 ) : (
-                  <><Edit2 className="w-4 h-4" /> Edit</>
+                  <><Edit02Icon className="w-4 h-4" /> Edit</>
                 )}
               </Button>
             </div>

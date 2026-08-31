@@ -8,7 +8,7 @@ import useTaskStore from '../store/taskStore';
 import useThemeStore from '../store/themeStore';
 import { logoutApi } from '../api/auth.api';
 import ConfirmDialog from './ConfirmDialog';
-import { CirclePlus, Search, Bell, CheckIcon, XIcon } from 'lucide-react';
+import { PlusSignCircleIcon, Search01Icon, Notification01Icon, CheckmarkBadge01Icon, Cancel01Icon, Sun01Icon, Moon01Icon, ComputerIcon } from 'hugeicons-react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import {
@@ -41,7 +41,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
-import { Sun, Moon, Monitor } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
@@ -194,7 +193,7 @@ const Navbar = () => {
           
           <div className="flex items-center gap-5">
             <div className="relative hidden md:block">
-              <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+              <Search01Icon className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search..."
@@ -208,7 +207,7 @@ const Navbar = () => {
                   className="relative text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center size-8"
                   title="Notifications"
                 >
-                  <Bell size={22} strokeWidth={2} />
+                  <Notification01Icon size={22} strokeWidth={2} />
                   {myInvitations.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
                       {myInvitations.length}
@@ -240,7 +239,7 @@ const Navbar = () => {
                           onClick={() => handleRespond(invitation.id, 'accepted', invitation.project.id)}
                           className="text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
                         >
-                          <CheckIcon className="h-5 w-5" />
+                          <CheckmarkBadge01Icon className="h-5 w-5" />
                         </Button>
                         <Button 
                           variant="ghost" 
@@ -249,7 +248,7 @@ const Navbar = () => {
                           onClick={() => handleRespond(invitation.id, 'rejected', null)}
                           className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                         >
-                          <XIcon className="h-5 w-5" />
+                          <Cancel01Icon className="h-5 w-5" />
                         </Button>
                       </ItemActions>
                     </Item>
@@ -268,7 +267,7 @@ const Navbar = () => {
               className="text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center size-8"
               title="Create Project"
             >
-              <CirclePlus size={22} strokeWidth={2} />
+              <PlusSignCircleIcon size={22} strokeWidth={2} />
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger render={
@@ -298,15 +297,15 @@ const Navbar = () => {
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         <DropdownMenuItem onClick={() => setTheme('light')}>
-                          <Sun className="mr-2 h-4 w-4" />
+                          <Sun01Icon className="mr-2 h-4 w-4" />
                           Light
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setTheme('dark')}>
-                          <Moon className="mr-2 h-4 w-4" />
+                          <Moon01Icon className="mr-2 h-4 w-4" />
                           Dark
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setTheme('system')}>
-                          <Monitor className="mr-2 h-4 w-4" />
+                          <ComputerIcon className="mr-2 h-4 w-4" />
                           System
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import useTaskStore from '../../store/taskStore';
 import useAuthStore from '../../store/authStore';
 import useProjectStore from '../../store/projectStore';
 import { getProjectMembersApi } from '../../api/invitation.api';
-import { Trash2, CircleCheckBig, Tag, X, Calendar as CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { Delete02Icon, CheckmarkCircle02Icon, Tag01Icon, Cancel01Icon, Calendar01Icon, CheckmarkBadge01Icon, ArrowUpDownIcon } from 'hugeicons-react';
 
 // ── TaskEditModal ─────────────────────────────────────────────────────────
 // Shows only title, tags, and assignee — as per owner edit scope
@@ -78,7 +78,7 @@ const TaskEditModal = ({ task, onClose }) => {
       });
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update task');
+      console.error(err);
       setIsSubmitting(false);
     }
   };
@@ -131,7 +131,7 @@ const TaskEditModal = ({ task, onClose }) => {
                     disabled={isSubmitting}
                     className="hover:text-destructive transition-colors"
                   >
-                    <X size={10} />
+                    <Cancel01Icon size={10} />
                   </button>
                 </span>
               ))}
@@ -165,7 +165,7 @@ const TaskEditModal = ({ task, onClose }) => {
                     {assigneeId
                       ? members.find((member) => member.user.id === assigneeId)?.user.username
                       : "Unassigned"}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <ArrowUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
@@ -181,7 +181,7 @@ const TaskEditModal = ({ task, onClose }) => {
                             setOpenAssignee(false);
                           }}
                         >
-                          <Check
+                          <CheckmarkBadge01Icon
                             className={cn(
                               "mr-2 h-4 w-4",
                               assigneeId === "" ? "opacity-100" : "opacity-0"
@@ -198,7 +198,7 @@ const TaskEditModal = ({ task, onClose }) => {
                               setOpenAssignee(false);
                             }}
                           >
-                            <Check
+                            <CheckmarkBadge01Icon
                               className={cn(
                                 "mr-2 h-4 w-4",
                                 assigneeId === member.user.id ? "opacity-100" : "opacity-0"
@@ -227,7 +227,7 @@ const TaskEditModal = ({ task, onClose }) => {
                     )}
                     disabled={isSubmitting}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <Calendar01Icon className="mr-2 h-4 w-4" />
                     {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
@@ -262,7 +262,7 @@ const TaskEditModal = ({ task, onClose }) => {
 };
 
 // ── TaskCard ──────────────────────────────────────────────────────────────
-const TaskCard = ({ task }) => {
+const TaskCard = memo(({ task }) => {
   const { deleteTask } = useTaskStore();
   const currentUser = useAuthStore((state) => state.user);
   const currentProject = useProjectStore((state) => state.currentProject);
@@ -311,7 +311,7 @@ const TaskCard = ({ task }) => {
       >
         <div className="flex justify-between items-start gap-2">
           <div className="flex items-start gap-2 flex-1 min-w-0">
-            <CircleCheckBig 
+            <CheckmarkCircle02Icon 
               className={cn("w-4 h-4 shrink-0 mt-0.5", task.status === 'completed' ? "text-green-500" : "text-muted-foreground")} 
             />
             <h4 className="text-sm font-medium break-words line-clamp-2 flex-1">{task.title}</h4>
@@ -323,7 +323,7 @@ const TaskCard = ({ task }) => {
               setShowConfirmDelete(true);
             }}
           >
-            <Trash2 size={13} />
+            <Delete02Icon size={13} />
           </button>
         </div>
 
@@ -335,7 +335,7 @@ const TaskCard = ({ task }) => {
                 key={tag}
                 className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20"
               >
-                <Tag size={8} />
+                <Tag01Icon size={8} />
                 {tag}
               </span>
             ))}
@@ -381,6 +381,6 @@ const TaskCard = ({ task }) => {
       />
     </>
   );
-};
+});
 
 export default TaskCard;

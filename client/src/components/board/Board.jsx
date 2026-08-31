@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, X, Maximize, Minimize } from 'lucide-react';
+import { PlusSignIcon, Cancel01Icon, Maximize01Icon, Minimize01Icon } from 'hugeicons-react';
 import useListStore from '../../store/listStore';
 import BoardColumn from './BoardColumn';
 import { Button } from '@/components/ui/button';
@@ -100,9 +100,9 @@ const Board = ({ projectId }) => {
           title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Board"}
         >
           {isFullscreen ? (
-            <Minimize className="h-4 w-4" />
+            <Minimize01Icon className="h-4 w-4" />
           ) : (
-            <Maximize className="h-4 w-4" />
+            <Maximize01Icon className="h-4 w-4" />
           )}
         </Button>
       </div>
@@ -135,7 +135,7 @@ const Board = ({ projectId }) => {
             onClick={() => setIsAddingList(true)}
             className="w-full flex items-center gap-2 px-4 py-3 bg-card border border-dashed border-border hover:border-primary/50 hover:bg-muted/50 rounded-2xl text-muted-foreground hover:text-foreground transition-all text-sm font-medium"
           >
-            <Plus size={16} />
+            <PlusSignIcon size={16} />
             Add another list
           </button>
         ) : (
@@ -163,7 +163,7 @@ const Board = ({ projectId }) => {
                 className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
                 disabled={isSubmitting}
               >
-                <X size={16} />
+                <Cancel01Icon size={16} />
               </button>
             </div>
           </form>

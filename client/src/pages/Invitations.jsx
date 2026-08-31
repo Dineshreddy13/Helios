@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useInvitationStore from '../store/invitationStore';
-import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 const Invitations = () => {
-  const { myInvitations, isLoading, error, fetchMyInvitations, respondToInvitation, clearError } = useInvitationStore();
+  const { myInvitations, isLoading, fetchMyInvitations, respondToInvitation } = useInvitationStore();
   const navigate = useNavigate();
   const [processingId, setProcessingId] = useState(null);
 
   useEffect(() => {
     fetchMyInvitations();
-    return () => clearError();
-  }, [fetchMyInvitations, clearError]);
+  }, [fetchMyInvitations]);
 
   const handleRespond = async (invitationId, response, projectId) => {
     setProcessingId(invitationId);
@@ -23,7 +21,7 @@ const Invitations = () => {
         navigate(`/projects/${projectId}`);
       }
     } catch (err) {
-      // Error handled by store
+      console.error(err);
     } finally {
       setProcessingId(null);
     }
@@ -31,20 +29,12 @@ const Invitations = () => {
 
   return (
     <>
-      <Navbar />
       <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
         <div className="w-full max-w-5xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">Pending Invitations</h1>
             <p className="text-gray-400">Manage your incoming project invitations.</p>
           </div>
-
-          {error && (
-            <div className="alert-error flex justify-between items-center mb-6">
-              <span>{error}</span>
-              <button onClick={clearError} className="text-red-400 hover:text-red-300">×</button>
-            </div>
-          )}
 
           {isLoading && myInvitations.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">Loading invitations...</div>

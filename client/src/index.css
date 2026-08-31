@@ -144,23 +144,29 @@
 }
 .helios-calendar .rbc-month-view,
 .helios-calendar .rbc-time-view {
-  @apply border-border bg-card text-foreground overflow-hidden rounded-md shadow-sm;
+  @apply border-border bg-transparent text-foreground overflow-hidden rounded-xl border;
 }
 .helios-calendar .rbc-header {
-  @apply border-border py-2 text-muted-foreground font-medium text-xs;
+  @apply border-border py-3 text-muted-foreground font-semibold text-sm bg-muted/10;
 }
 .helios-calendar .rbc-day-bg {
   @apply border-border transition-colors;
+}
+.helios-calendar .rbc-day-bg:hover {
+  @apply bg-muted/20;
 }
 .helios-calendar .rbc-day-bg + .rbc-day-bg,
 .helios-calendar .rbc-month-row + .rbc-month-row {
   @apply border-border;
 }
 .helios-calendar .rbc-off-range-bg {
-  @apply bg-muted/20;
+  @apply bg-muted/30 text-muted-foreground/40;
 }
 .helios-calendar .rbc-today {
   @apply bg-primary/5;
+}
+.helios-calendar .rbc-date-cell {
+  @apply p-2 text-right font-medium;
 }
 .helios-calendar .rbc-event {
   @apply p-0 bg-transparent;
@@ -173,8 +179,11 @@
   @apply border-border;
 }
 .helios-calendar .rbc-toolbar button {
-  @apply text-foreground border-border hover:bg-muted active:bg-muted/80 shadow-sm transition-colors rounded-md px-3 py-1 text-sm;
+  @apply text-foreground border-border hover:bg-muted active:bg-muted/80 shadow-sm transition-colors rounded-md px-4 py-2 text-sm font-medium;
 }
 .helios-calendar .rbc-toolbar button.rbc-active {
   @apply bg-primary/10 text-primary border-primary/20 shadow-none;
+}
+.helios-calendar .rbc-toolbar .rbc-toolbar-label {
+  @apply font-semibold text-lg;
 }

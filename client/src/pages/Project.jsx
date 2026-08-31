@@ -4,7 +4,6 @@ import useProjectStore from '../store/projectStore';
 import { Button } from '@/components/ui/button';
 import { Calendar, CalendarDayButton } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import Navbar from '../components/Navbar';
 import ProjectMembers from '../components/ProjectMembers';
 import ProjectReadme from '../components/ProjectReadme';
 import Board from '../components/board/Board';
@@ -78,7 +77,6 @@ const Project = () => {
 
   return (
     <>
-      <Navbar />
       <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
         <div className="w-full max-w-7xl">
 

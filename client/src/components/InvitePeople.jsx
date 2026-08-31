@@ -31,9 +31,7 @@ const InvitePeople = ({ projectId }) => {
     projectMembers, 
     projectInvitations, 
     fetchProjectInvitations, 
-    inviteUser,
-    error,
-    clearError
+    inviteUser
   } = useInvitationStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,8 +44,7 @@ const InvitePeople = ({ projectId }) => {
 
   useEffect(() => {
     fetchProjectInvitations(projectId);
-    return () => clearError();
-  }, [projectId, fetchProjectInvitations, clearError]);
+  }, [projectId, fetchProjectInvitations]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -77,24 +74,21 @@ const InvitePeople = ({ projectId }) => {
     search();
   }, [debouncedQuery, projectMembers, projectInvitations]);
 
-  // Reset search when dialog closes
   useEffect(() => {
     if (!isDialogOpen) {
       setSearchQuery('');
       setSearchResults([]);
-      setLocalError(null);
     }
   }, [isDialogOpen]);
 
   const handleInvite = async (userId) => {
     setInvitingId(userId);
-    setLocalError(null);
     try {
       await inviteUser(projectId, userId);
       setSearchQuery(''); 
       setSearchResults([]);
     } catch (err) {
-      setLocalError(err.response?.data?.message || 'Failed to invite user');
+      console.error(err);
     } finally {
       setInvitingId(null);
     }
@@ -153,11 +147,6 @@ const InvitePeople = ({ projectId }) => {
                 )}
               </CommandList>
             </Command>
-            {(error || localError) && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10">
-                {error || localError}
-              </div>
-            )}
           </DialogContent>
         </Dialog>
       </div>
