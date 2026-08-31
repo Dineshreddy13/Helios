@@ -1,6 +1,10 @@
-import { getCurrentUser, login, logout, register, resendOtp, verifyOtp } from "./auth.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import { getCurrentUser, logout, login } from "./services/auth.service.js"
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { register } from "./services/registration.service.js";
+import { verifyOtp, resendOtp } from "./services/verification.service.js";
+import { forgotPasswordService } from "./services/forgot.password.service.js";
+import { resetPasswordService } from "./services/reset.password.service.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
 const sendAuthResponse = (res, payload, statusCode = 200) => {
   const cookiePayload = { httpOnly: true, path: "/" };
@@ -61,5 +65,19 @@ export const resendOtpCode = asyncHandler(async (req, res, next) => {
       expiresInSeconds: payload.expiresInSeconds,
       verified: payload.verified,
     }, payload.message)
+  );
+});
+
+export const forgotPasswordRequest = asyncHandler(async (req, res, next) => {
+  const payload = await forgotPasswordService(req.validated.body);
+  return res.status(200).json(
+    new ApiResponse(200, null, payload.message)
+  );
+});
+
+export const resetPasswordRequest = asyncHandler(async (req, res, next) => {
+  const payload = await resetPasswordService(req.validated.body);
+  return res.status(200).json(
+    new ApiResponse(200, null, payload.message)
   );
 });

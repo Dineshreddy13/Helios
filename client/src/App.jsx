@@ -1,22 +1,25 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import SignIn from './pages/auth/SignIn';
-import SignUp from './pages/auth/SignUp';
-import Dashboard from './pages/Dashboard';
-import Project from './pages/Project';
-import Invitations from './pages/Invitations';
-import VerifyOtp from './pages/auth/VerifyOtp';
 import PublicRoute from './components/PublicRoute';
 import ProtectedRoute from './components/ProtectedRoute';
+import AppLayout from './components/AppLayout';
 import useAuthStore from './store/authStore';
 import useThemeStore from './store/themeStore';
 import { getMeApi } from './api/auth.api';
-import Discuss from './pages/Discuss';
-import Talk from './pages/Talk';
-import Settings from './pages/Settings';
-import CreateProject from './pages/CreateProject';
-import TaskPage from './pages/TaskPage';
-import ProjectCalendar from './pages/ProjectCalendar';
+import { Toaster } from '@/components/ui/toast';
+
+const SignIn = lazy(() => import('./pages/auth/SignIn'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const SignUp = lazy(() => import('./pages/auth/SignUp'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Project = lazy(() => import('./pages/Project'));
+const VerifyOtp = lazy(() => import('./pages/auth/VerifyOtp'));
+const Discuss = lazy(() => import('./pages/Discuss'));
+const Talk = lazy(() => import('./pages/Talk'));
+const Settings = lazy(() => import('./pages/Settings'));
+const CreateProject = lazy(() => import('./pages/CreateProject'));
+const TaskPage = lazy(() => import('./pages/TaskPage'));
+const ProjectCalendar = lazy(() => import('./pages/ProjectCalendar'));
 
 const AppRoutes = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -36,7 +39,7 @@ const AppRoutes = () => {
         root.classList.remove('light', 'dark');
         root.classList.add(e.matches ? 'dark' : 'light');
       };
-      
+
       mediaQuery.addEventListener('change', listener);
       return () => mediaQuery.removeEventListener('change', listener);
     } else {
@@ -65,7 +68,12 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
+    <Suspense fallback={
+      <div className="page-container">
+        <div className="spinner" />
+      </div>
+    }>
+      <Routes>
       <Route
         path="/"
         element={
@@ -87,81 +95,39 @@ const AppRoutes = () => {
         element={<VerifyOtp />}
       />
       <Route
-        path="/dashboard"
+        path="/forgot-password"
         element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
         }
       />
-      <Route
-        path="/projects/new"
-        element={
-          <ProtectedRoute>
-            <CreateProject />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects/:projectId"
-        element={
-          <ProtectedRoute>
-            <Project />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects/:projectId/calendar"
-        element={
-          <ProtectedRoute>
-            <ProjectCalendar />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects/:projectId/tasks/:taskId"
-        element={
-          <ProtectedRoute>
-            <TaskPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<AppLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/projects/new" element={<CreateProject />} />
+        <Route path="/projects/:projectId" element={<Project />} />
+        <Route path="/projects/:projectId/calendar" element={<ProjectCalendar />} />
+        <Route path="/projects/:projectId/tasks/:taskId" element={<TaskPage />} />
+        <Route path="/projects/:projectId/discuss" element={<Discuss />} />
+        <Route path="/projects/:projectId/talk" element={<Talk />} />
+        <Route path="/projects/:projectId/settings" element={<Settings />} />
+      </Route>
 
-      <Route
-        path="/projects/:projectId/discuss"
-        element={
-          <ProtectedRoute>
-            <Discuss />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects/:projectId/talk"
-        element={
-          <ProtectedRoute>
-            <Talk />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/projects/:projectId/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 };
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+      <Toaster />
+    </>
   );
 };
 

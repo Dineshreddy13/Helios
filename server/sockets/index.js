@@ -23,7 +23,7 @@ export const initSocket = (httpServer) => {
             // Read the HttpOnly auth_token cookie from the handshake request headers
             const rawCookies = socket.handshake.headers?.cookie || "";
             const cookies = parseCookies(rawCookies);
-            const token = cookies["auth_token"];
+            const token = cookies["auth_token"] || socket.handshake.auth?.token;
 
             if (!token) {
                 return next(new Error("Authentication required"));
@@ -56,6 +56,9 @@ export const initSocket = (httpServer) => {
     // ── Connection handler ────────────────────────────────────────────────────
     io.on("connection", (socket) => {
         logger.info(`Socket connected: ${socket.id} (user: ${socket.user.id})`);
+
+        // Join a personal room to allow targeting all of a user's devices
+        socket.join(`user:${socket.user.id}`);
 
         // joinProject
         socket.on("joinProject", async ({ projectId } = {}) => {

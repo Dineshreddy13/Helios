@@ -100,9 +100,9 @@ export const reminderWorker = new Worker("reminderQueue", processReminderJob, {
 });
 
 reminderWorker.on("completed", (job) => {
-  console.log(`Reminder job ${job.id} completed.`);
+  logger.info(`Reminder job ${job.id} completed.`);
 });
 
 reminderWorker.on("failed", (job, err) => {
-  console.error(`Reminder job ${job.id} failed:`, err.message);
+  logger.error(`Reminder job ${job.id} failed: ${err.message}`);
 });
