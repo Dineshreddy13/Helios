@@ -1,8 +1,9 @@
 import pino from "pino";
+import { LOG_LEVEL, NODE_ENV } from "../config/env.js";
 
 const logger = pino({
-    level: process.env.LOG_LEVEL || "info",
-    transport: process.env.NODE_ENV !== "production"
+    level: LOG_LEVEL || "info",
+    transport: NODE_ENV !== "production"
         ? {
             target: "pino-pretty",
             options: {
@@ -10,7 +11,7 @@ const logger = pino({
                 translateTime: "SYS:standard",
                 ignore: "pid,hostname",
                 messageFormat: "{msg}",
-                hideObject: true,
+                // hideObject: true
             },
         }
         : undefined,

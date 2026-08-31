@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { JWT_EXPIRES_IN, JWT_SECRET } from "../../../config/env.js";
+import { JWT_EXPIRES_IN, JWT_SECRET, NODE_ENV } from "../../../config/env.js";
 import { COOKIE_NAME } from "../../../config/constants.js";
 
 export const sanitizeUser = (user) => ({
@@ -14,7 +14,7 @@ export const sanitizeUser = (user) => ({
     updatedAt: user.updatedAt,
 });
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = NODE_ENV === "production";
 
 export const generateToken = (userId) => jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
