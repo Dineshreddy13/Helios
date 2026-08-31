@@ -1,3 +1,13 @@
+process.on("uncaughtException", (err) => {
+  logger.fatal({ err }, "Uncaught Exception - Shutting down");
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (err) => {
+  logger.fatal({ err }, "Unhandled Rejection - Shutting down");
+  process.exit(1);
+});
+
 import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -15,6 +25,7 @@ import "./jobs/workers/reminder.worker.js";
 import logger from "./utils/logger.js";
 import { httpLogger } from "./middlewares/logger.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { ApiError } from "./utils/ApiError.js";
 
 const app = express();
 app.set("trust proxy", 1); // Trust first proxy (Render load balancer)
@@ -42,6 +53,11 @@ app.get("/api/health", (req, res) => {
   res.json({ success: true, message: APP_MSG.HEALTH_CHECK_SUCCESS });
 });
 
+// Handle 404 routes
+app.use((req, res, next) => {
+  next(new ApiError(404, `API endpoint not found: ${req.originalUrl}`));
+});
+
 app.use(errorHandler);
 
 const start = async () => {
@@ -60,12 +76,12 @@ const shutdown = async () => {
     logger.info("HTTP server closed.");
     await closeDB();
     import('./config/redis.js').then(async ({ redis }) => {
-       await redis.quit();
-       logger.info("Redis connection closed.");
-       process.exit(0);
+      await redis.quit();
+      logger.info("Redis connection closed.");
+      process.exit(0);
     }).catch((err) => {
-       logger.error("Error closing redis: ", err);
-       process.exit(1);
+      logger.error("Error closing redis: ", err);
+      process.exit(1);
     });
   });
 

@@ -44,6 +44,6 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-    token: z.string().trim().min(1, VALIDATION_MSG.PASSWORD_RESET_TOKEN_REQUIRED),
+    token: otpSchema,
     password: passwordSchema,
 });

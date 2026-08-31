@@ -15,6 +15,8 @@ const envSchema = z.object({
     BREVO_SENDER_NAME: z.string().default("Helios"),
     OTP_TTL: z.string().default("600"),
     PASSWORD_RESET_TTL: z.string().default("900"),
+    NODE_ENV: z.enum(["development", "production"]),
+    LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -25,6 +27,7 @@ if (!parsedEnv.success) {
 }
 
 export const {
+    NODE_ENV,
     PORT,
     DATABASE_URL,
     CLIENT_URL,
@@ -36,4 +39,5 @@ export const {
     BREVO_SENDER_NAME,
     OTP_TTL,
     PASSWORD_RESET_TTL,
+    LOG_LEVEL
 } = parsedEnv.data;
