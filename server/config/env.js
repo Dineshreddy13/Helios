@@ -10,11 +10,9 @@ const envSchema = z.object({
     JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
     JWT_EXPIRES_IN: z.string().default("1d"),
     REDIS_URL: z.string().min(1, "REDIS_URL is required"),
-    SMTP_HOST: z.string().min(1, "SMTP_HOST is required"),
-    SMTP_PORT: z.string().default("587"),
-    SMTP_USER: z.string().min(1, "SMTP_USER is required"),
-    SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
-    MAIL_FROM: z.string().min(1, "MAIL_FROM is required"),
+    BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required"),
+    BREVO_SENDER_EMAIL: z.string().min(1, "BREVO_SENDER_EMAIL is required"),
+    BREVO_SENDER_NAME: z.string().default("Helios"),
     OTP_TTL: z.string().default("600"),
 });
 
@@ -32,10 +30,8 @@ export const {
     JWT_SECRET,
     JWT_EXPIRES_IN,
     REDIS_URL,
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_USER,
-    SMTP_PASS,
-    MAIL_FROM,
+    BREVO_API_KEY,
+    BREVO_SENDER_EMAIL,
+    BREVO_SENDER_NAME,
     OTP_TTL,
 } = parsedEnv.data;
