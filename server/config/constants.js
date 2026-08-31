@@ -1,3 +1,15 @@
+export const OTP_CONFIG = {
+    PREFIX: {
+        EMAIL_VERIFICATION: "email-verification",
+        PASSWORD_RESET: "password-reset",
+    },
+    LENGTH: 6,
+    RESEND_COOLDOWN_SECONDS: 60,
+    RESEND_MAX_COUNT: 3,
+};
+
+export const COOKIE_NAME = "auth_token";
+
 export const DB_MSG = {
     CONNECTED : "Database connection successfull.",
     CONNECTION_FAILED: "Database connection failed."
@@ -34,6 +46,10 @@ export const AUTH_MSG = {
     EMAIL_VERIFICATION_RESEND_FAILED: "Unable to resend verification email.",
     EMAIL_VERIFICATION_RESEND_TOO_SOON: "Please wait before requesting another code.",
     EMAIL_VERIFICATION_RESEND_LIMIT_REACHED: "You have requested too many verification codes.",
+    PASSWORD_RESET_EMAIL_SENT: "If an account exists with this email, a password reset link has been sent.",
+    PASSWORD_RESET_SEND_FAILED: "Unable to send password reset email.",
+    PASSWORD_RESET_TOKEN_INVALID: "Invalid or expired password reset link.",
+    PASSWORD_RESET_SUCCESS: "Password reset successfully.",
 }
 
 export const VALIDATION_MSG = {
@@ -46,6 +62,8 @@ export const VALIDATION_MSG = {
     PASSWORD_REQUIRED: "Password is required.",
     REQUEST_ID_INVALID: "Please provide a valid verification request id.",
     OTP_INVALID: "Please provide a valid 6 digit verification code.",
+    PASSWORD_RESET_TOKEN_REQUIRED: "Password reset token is required.",
+
     PROJECT_NAME_MIN: "Project name must be at least 3 characters long.",
     PROJECT_NAME_MAX: "Project name must be at most 100 characters long.",
     PROJECT_DESC_MAX: "Project description must be at most 500 characters long.",

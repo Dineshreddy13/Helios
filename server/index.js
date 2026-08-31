@@ -2,11 +2,12 @@ import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import express from "express";
+import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { PORT, CLIENT_URL } from "./config/env.js";
 import { APP_MSG } from "./config/constants.js";
-import { connectDB } from "./database/db.js";
+import { connectDB, closeDB } from "./database/db.js";
 import apiRoutes from "./routes/index.js";
 import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
@@ -21,6 +22,7 @@ const httpServer = http.createServer(app);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -50,4 +52,29 @@ const start = async () => {
   });
 };
 
-start();
+start();
+
+const shutdown = async () => {
+  logger.info("Graceful shutdown initiated...");
+  httpServer.close(async () => {
+    logger.info("HTTP server closed.");
+    await closeDB();
+    import('./config/redis.js').then(async ({ redis }) => {
+       await redis.quit();
+       logger.info("Redis connection closed.");
+       process.exit(0);
+    }).catch((err) => {
+       logger.error("Error closing redis: ", err);
+       process.exit(1);
+    });
+  });
+
+  // Force close after 10 seconds
+  setTimeout(() => {
+    logger.error("Could not close connections in time, forcefully shutting down");
+    process.exit(1);
+  }, 10000);
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

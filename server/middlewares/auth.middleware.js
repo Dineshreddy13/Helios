@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
 import { db } from "../database/db.js";
 import { users } from "../models/index.js";
+import { getCache, setCache } from "../utils/cache.js";
 import { JWT_SECRET } from "../config/env.js";
 import { AUTH_MSG } from "../config/constants.js";
 
@@ -28,14 +29,21 @@ export const requireAuth = async (req, res, next) => {
       return res.status(401).json({ success: false, message: AUTH_MSG.INVALID_TOKEN });
     }
 
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    let user = await getCache(`user:${userId}`);
 
     if (!user) {
-      return res.status(401).json({ success: false, message: AUTH_MSG.USER_NOT_FOUND });
+      const [dbUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!dbUser) {
+        return res.status(401).json({ success: false, message: AUTH_MSG.USER_NOT_FOUND });
+      }
+
+      user = dbUser;
+      await setCache(`user:${userId}`, user, 3600); // cache for 1 hour
     }
 
     req.user = user;

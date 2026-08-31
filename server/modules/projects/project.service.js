@@ -12,6 +12,7 @@ import { logActivity } from "../activity/activity.service.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { getCache, setCache, delCache } from "../../utils/cache.js";
 import { requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../../utils/permissions.js";
+import { SocketService } from "../../sockets/socket.service.js";
 
 // ── createProject ──────────────────────────────────────────────────────────
 export const createProject = async (userId, { name, description, includeReadme }) => {
@@ -108,8 +109,19 @@ export const deleteProject = async (projectId, userId) => {
 
     await requireProjectOwner(projectId, userId);
 
+    const members = await db
+        .select({ userId: projectMembers.userId })
+        .from(projectMembers)
+        .where(eq(projectMembers.projectId, projectId));
+
     await db.delete(projects).where(eq(projects.id, projectId));
-    await delCache(`projects:user:${userId}`);
+    
+    for (const member of members) {
+        await delCache(`projects:user:${member.userId}`);
+        await invalidateMembershipCache(projectId, member.userId);
+    }
+
+    SocketService.forceLeaveAllFromProject(projectId);
 
     return { message: PROJECT_MSG.DELETED };
 };

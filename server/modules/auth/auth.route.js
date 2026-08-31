@@ -1,8 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { loginUser, logoutUser, getMe, registerUser, resendOtpCode, verifyOtpCode } from "./auth.controller.js";
+import { loginUser, logoutUser, getMe, registerUser, resendOtpCode, verifyOtpCode, forgotPasswordRequest, resetPasswordRequest } from "./auth.controller.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
-import { loginAuthSchema, registerAuthSchema, resendOtpSchema, verifyOtpSchema } from "../../validators/auth.validator.js";
+import { loginAuthSchema, registerAuthSchema, resendOtpSchema, verifyOtpSchema, forgotPasswordSchema, resetPasswordSchema } from "../../validators/auth.validator.js";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { AUTH_MSG } from "../../config/constants.js";
 
@@ -18,6 +18,8 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, validateRequest(registerAuthSchema), registerUser);
 router.post("/login", authLimiter, validateRequest(loginAuthSchema), loginUser);
+router.post("/forgot-password", authLimiter, validateRequest(forgotPasswordSchema), forgotPasswordRequest);
+router.post("/reset-password", authLimiter, validateRequest(resetPasswordSchema), resetPasswordRequest);
 
 router.post("/verify-otp", authLimiter, validateRequest(verifyOtpSchema), verifyOtpCode);
 router.post("/resend-otp", authLimiter, validateRequest(resendOtpSchema), resendOtpCode);

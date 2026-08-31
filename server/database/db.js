@@ -6,7 +6,7 @@ import { DB_MSG } from "../config/constants.js";
 import logger from "../utils/logger.js";
 
 const { Pool } = pg;
-const pool = new Pool({ 
+export const pool = new Pool({ 
   connectionString: DATABASE_URL,
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
 });
@@ -20,5 +20,14 @@ export const connectDB = async () => {
   }catch(error) {
     logger.error({category: "DB"}, DB_MSG.CONNECTION_FAILED, error);
     process.exit(1);
+  }
+};
+
+export const closeDB = async () => {
+  try {
+    await pool.end();
+    logger.info({category: "DB"}, "Database connection closed");
+  } catch (error) {
+    logger.error({category: "DB", err: error}, "Error closing database connection");
   }
 };
