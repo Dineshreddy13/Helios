@@ -9,6 +9,7 @@ import { getMeApi } from './api/auth.api';
 import { Toaster } from '@/components/ui/toast';
 
 const SignIn = lazy(() => import('./pages/auth/SignIn'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const SignUp = lazy(() => import('./pages/auth/SignUp'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Project = lazy(() => import('./pages/Project'));
@@ -92,6 +93,14 @@ const AppRoutes = () => {
       <Route
         path="/verify-otp"
         element={<VerifyOtp />}
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
       />
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
