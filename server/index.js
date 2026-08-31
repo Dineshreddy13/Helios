@@ -12,6 +12,7 @@ import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
 import "./jobs/workers/reminder.worker.js";
 import logger from "./utils/logger.js";
+import { httpLogger } from "./middlewares/logger.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
@@ -23,6 +24,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(httpLogger);
 
 app.use(
   cors({

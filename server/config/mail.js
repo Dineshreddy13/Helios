@@ -1,12 +1,15 @@
-import nodemailer from "nodemailer";
-import { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } from "./env.js";
+import { BrevoClient } from "@getbrevo/brevo";
+import { BREVO_API_KEY, BREVO_SENDER_EMAIL, BREVO_SENDER_NAME } from "./env.js";
 
-export const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: Number(SMTP_PORT),
-  secure: false,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
+const brevo = new BrevoClient({
+  apiKey: BREVO_API_KEY,
 });
+
+export const sendEmail = async ({ to, subject, html }) => {
+  return await brevo.transactionalEmails.sendTransacEmail({
+    subject: subject,
+    htmlContent: html,
+    sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+    to: [{ email: to }],
+  });
+};
