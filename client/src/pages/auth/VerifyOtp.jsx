@@ -32,7 +32,6 @@ const VerifyOtp = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [apiError, setApiError] = useState('');
   const [resendMsg, setResendMsg] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef(null);
@@ -65,21 +64,19 @@ const VerifyOtp = () => {
   useEffect(() => () => clearInterval(cooldownRef.current), []);
 
   const onSubmit = async ({ otp }) => {
-    setApiError('');
     setIsSubmitting(true);
     try {
       const data = await verifyOtpApi({ requestId, otp });
       login(data.user);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setApiError(err.response?.data?.message || 'Verification failed. Please try again.');
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleResend = async () => {
-    setApiError('');
     setResendMsg('');
     setIsResending(true);
     try {
@@ -102,7 +99,7 @@ const VerifyOtp = () => {
       setResendMsg('A new code has been sent to your email.');
       startCooldown();
     } catch (err) {
-      setApiError(err.response?.data?.message || 'Failed to resend code. Please try again.');
+      console.error(err);
     } finally {
       setIsResending(false);
     }
@@ -122,11 +119,6 @@ const VerifyOtp = () => {
             </p>
           </div>
 
-          {apiError && (
-            <div className="text-sm font-medium text-destructive text-center p-2 bg-destructive/10 rounded-md">
-              {apiError}
-            </div>
-          )}
           {resendMsg && (
             <div className="text-sm font-medium text-green-600 text-center p-2 bg-green-100 rounded-md">
               {resendMsg}

@@ -1,5 +1,6 @@
 import axios from "axios";
 import useAuthStore from "../store/authStore";
+import { toast } from "@/components/ui/toast";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -24,6 +25,21 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthEndpoint) {
       useAuthStore.getState().logout();
       window.location.replace("/");
+    } else if (error.response) {
+      // Don't show toast for 401 on the /me endpoint as it's an expected failure for unauthenticated users
+      if (!(error.response.status === 401 && requestUrl.includes("/api/v1/auth/me"))) {
+        toast({
+          title: "Error",
+          description: error.response.data?.message || error.message || "An unexpected error occurred",
+          type: "error",
+        });
+      }
+    } else if (error.request) {
+      toast({
+        title: "Network Error",
+        description: "Could not connect to the server.",
+        type: "error",
+      });
     }
 
     return Promise.reject(error);

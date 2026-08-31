@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { EllipsisVertical, Plus, X } from 'lucide-react';
+import { MoreVerticalIcon, PlusSignIcon, Cancel01Icon } from 'hugeicons-react';
 import useListStore from '../../store/listStore';
 import useTaskStore from '../../store/taskStore';
 import ConfirmDialog from '../ConfirmDialog';
@@ -15,7 +15,7 @@ import TaskCard from './TaskCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export const BoardColumnUI = ({
+export const BoardColumnUI = memo(({
   list,
   isDragging,
   listeners,
@@ -126,12 +126,12 @@ export const BoardColumnUI = ({
               onClick={() => setIsAddingTask(true)}
               title="Add task"
             >
-              <Plus size={15} />
+              <PlusSignIcon size={15} />
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger render={
                 <button className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted shrink-0 opacity-0 group-hover:opacity-100 transition-all">
-                  <EllipsisVertical size={15} />
+                  <MoreVerticalIcon size={15} />
                 </button>
               } />
               <DropdownMenuContent align="end" className="w-36">
@@ -178,7 +178,7 @@ export const BoardColumnUI = ({
                   className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
                   disabled={isSubmittingTask}
                 >
-                  <X size={15} />
+                  <Cancel01Icon size={15} />
                 </button>
               </div>
             </form>
@@ -192,7 +192,7 @@ export const BoardColumnUI = ({
               onClick={() => setIsAddingTask(true)}
               className="w-full flex items-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-medium transition-colors"
             >
-              <Plus size={14} />
+              <PlusSignIcon size={14} />
               Add a task
             </button>
           </div>
@@ -212,9 +212,9 @@ export const BoardColumnUI = ({
       />
     </>
   );
-};
+});
 
-const BoardColumn = ({ list, isOverlay }) => {
+const BoardColumn = memo(({ list, isOverlay }) => {
   const {
     attributes,
     listeners,
@@ -249,6 +249,6 @@ const BoardColumn = ({ list, isOverlay }) => {
       style={style}
     />
   );
-};
+});
 
 export default BoardColumn;

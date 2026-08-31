@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
-import { SendHorizonal, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react';
+import { SentIcon, Edit02Icon, Delete02Icon, Cancel01Icon, CheckmarkBadge01Icon, Loading03Icon } from 'hugeicons-react';
 import {
   Avatar,
   AvatarFallback,
@@ -19,13 +19,61 @@ import { Spinner } from '@/components/ui/spinner';
 import useDiscussionStore from '../store/discussionStore';
 import useAuthStore from '../store/authStore';
 
+const DiscussionInput = ({ projectId, sendMessage }) => {
+  const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    const content = input.trim();
+    if (!content || isSending) return;
+
+    setIsSending(true);
+    try {
+      await sendMessage(projectId, content);
+      setInput('');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSend}
+      className="flex items-center gap-3 px-5 py-3 border-t border-border"
+    >
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Type a message..."
+        className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        disabled={isSending}
+      />
+      <Button
+        type="submit"
+        size="icon"
+        disabled={!input.trim() || isSending}
+        className="shrink-0"
+      >
+        {isSending ? (
+          <Loading03Icon className="w-4 h-4 animate-spin" />
+        ) : (
+          <SentIcon className="w-4 h-4" />
+        )}
+      </Button>
+    </form>
+  );
+};
+
 const ProjectDiscussion = ({ projectId }) => {
   const { user } = useAuthStore();
   const {
     messages,
     isLoading,
     hasMore,
-    error,
     fetchMessages,
     sendMessage,
     editMessage,
@@ -35,10 +83,8 @@ const ProjectDiscussion = ({ projectId }) => {
     clearMessages,
   } = useDiscussionStore();
 
-  const [input, setInput] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editInput, setEditInput] = useState('');
-  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const isInitialLoad = useRef(true);
@@ -81,23 +127,6 @@ const ProjectDiscussion = ({ projectId }) => {
       });
     }
   }, [projectId, isLoading, fetchMessages]);
-
-  // Send message
-  const handleSend = async (e) => {
-    e.preventDefault();
-    const content = input.trim();
-    if (!content || isSending) return;
-
-    setIsSending(true);
-    try {
-      await sendMessage(projectId, content);
-      setInput('');
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   // Edit message
   const handleEdit = async (messageId) => {
@@ -214,7 +243,7 @@ const ProjectDiscussion = ({ projectId }) => {
                       className="h-7 w-7"
                       onClick={() => handleEdit(msg.id)}
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <CheckmarkBadge01Icon className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -222,7 +251,7 @@ const ProjectDiscussion = ({ projectId }) => {
                       className="h-7 w-7"
                       onClick={cancelEdit}
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <Cancel01Icon className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ) : (
@@ -244,7 +273,7 @@ const ProjectDiscussion = ({ projectId }) => {
                         onClick={() => startEdit(msg)}
                         title="Edit"
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Edit02Icon className="w-3 h-3" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -253,7 +282,7 @@ const ProjectDiscussion = ({ projectId }) => {
                         onClick={() => handleDelete(msg.id)}
                         title="Delete"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Delete02Icon className="w-3 h-3" />
                       </Button>
                     </div>
                   )}
@@ -266,39 +295,8 @@ const ProjectDiscussion = ({ projectId }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="px-5 py-2 text-xs text-destructive bg-destructive/10 border-t border-destructive/20">
-          {error}
-        </div>
-      )}
-
       {/* Input Area */}
-      <form
-        onSubmit={handleSend}
-        className="flex items-center gap-3 px-5 py-3 border-t border-border"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message..."
-          className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          disabled={isSending}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!input.trim() || isSending}
-          className="shrink-0"
-        >
-          {isSending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <SendHorizonal className="w-4 h-4" />
-          )}
-        </Button>
-      </form>
+      <DiscussionInput projectId={projectId} sendMessage={sendMessage} />
     </div>
   );
 };

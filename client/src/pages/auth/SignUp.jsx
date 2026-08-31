@@ -42,7 +42,7 @@ export default function SignUp({ className, ...props }) {
         } 
       })
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.')
+      console.error(err);
     } finally {
       setIsLoading(false)
     }

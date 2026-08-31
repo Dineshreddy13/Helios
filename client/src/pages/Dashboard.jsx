@@ -2,16 +2,17 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import useActivityStore from '../store/activityStore';
-import Navbar from '../components/Navbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CheckmarkCircle02Icon, UserIcon, Tag01Icon, Edit02Icon, CircleIcon } from 'hugeicons-react';
 import { formatRelativeTime } from '../utils/date';
 
 const Dashboard = () => {
   const { projects, isLoading, error, fetchProjects, clearError } = useProjectStore();
-  const { 
-    dashboardActivity, 
-    isLoading: isActivityLoading, 
+  const {
+    dashboardActivity,
+    isLoading: isActivityLoading,
     fetchDashboardActivity,
     setupDashboardSocketListeners,
     teardownDashboardSocketListeners
@@ -51,11 +52,27 @@ const Dashboard = () => {
     return activity.message;
   };
 
+  const renderActivityIcon = (targetType) => {
+    switch (targetType) {
+      case 'TASK':
+        return <CheckmarkCircle02Icon className="w-3.5 h-3.5 text-blue-500" />;
+      case 'PROJECT':
+        return <Tag01Icon className="w-3.5 h-3.5 text-purple-500" />;
+      case 'MEMBER':
+        return <UserIcon className="w-3.5 h-3.5 text-green-500" />;
+      case 'MESSAGE':
+        return <Edit02Icon className="w-3.5 h-3.5 text-orange-500" />;
+      default:
+        return <CircleIcon className="w-3.5 h-3.5 text-muted-foreground" />;
+    }
+  };
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   return (
     <>
-      <Navbar />
       <div className="flex flex-col lg:flex-row min-h-[calc(100vh-65px)]">
-        
+
         {/* Main Content Area */}
         <div className="flex-1 p-6 lg:p-8 order-1 w-full">
           <div className="max-w-5xl mx-auto">
@@ -114,34 +131,53 @@ const Dashboard = () => {
         </div>
 
         {/* Activity Feed Sidebar */}
-        <div className="w-full lg:w-[300px] xl:w-[340px] shrink-0 border-t lg:border-t-0 lg:border-l border-border order-2 lg:min-h-[calc(100vh-65px)]">
-          <div className="sticky top-[65px] h-auto lg:h-[calc(100vh-65px)] flex flex-col">
-            <div className="p-5 lg:p-6 pb-2 border-b border-border">
-              <h2 className="text-base font-semibold tracking-tight">Recent Activity</h2>
+        <div className="w-full lg:w-[300px] xl:w-[320px] shrink-0 p-6 lg:pl-0 lg:py-8 lg:pr-8 order-2">
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-muted/10">
+              <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Recent Activity</h2>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 lg:p-3">
+            <div className="flex flex-col p-2">
               {isActivityLoading && (!dashboardActivity || dashboardActivity.length === 0) ? (
-                <div className="p-6 text-center text-muted-foreground text-sm flex justify-center items-center h-24">
-                  <div className="w-5 h-5 rounded-full border-2 border-border border-t-foreground animate-spin"></div>
+                <div className="p-4 text-center text-muted-foreground text-sm flex justify-center items-center h-16">
+                  <div className="w-4 h-4 rounded-full border-2 border-border border-t-foreground animate-spin"></div>
                 </div>
               ) : (!dashboardActivity || dashboardActivity.length === 0) ? (
                 <div className="p-6 text-center text-muted-foreground text-sm">No recent activity</div>
               ) : (
-                <div className="divide-y divide-border/50">
-                  {dashboardActivity?.map((activity) => (
-                    <div key={activity.id} className="p-3 hover:bg-muted/50 transition-colors rounded-xl">
-                      <p className="text-sm text-muted-foreground leading-snug">
-                        {renderActivityMessage(activity)}
-                      </p>
-                      <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider">
-                        <span className="truncate max-w-[120px]">{activity.project?.name}</span>
-                        <span>{formatRelativeTime(activity.createdAt)}</span>
+                <div className="relative pl-6 space-y-5 pb-4 pt-3">
+                  {/* Vertical Line */}
+                  <div className="absolute top-5 bottom-6 left-[15px] w-[2px] bg-border/60" />
+                  
+                  {dashboardActivity?.slice(0, 6).map((activity) => (
+                    <div key={activity.id} className="relative flex items-start gap-3 z-10 group">
+                      {/* Timeline Dot/Icon */}
+                      <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 ml-[-20px] rounded-full bg-card border-[2px] border-border text-muted-foreground mt-0 shadow-sm group-hover:border-primary/50 transition-colors">
+                        {renderActivityIcon(activity.targetType)}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 flex flex-col mt-0.5">
+                        <p className="text-sm text-foreground leading-snug">
+                          {renderActivityMessage(activity)}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium mt-1">
+                          <span className="truncate max-w-[120px]">{activity.project?.name}</span>
+                          <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/50 mx-0.5"></span>
+                          <span className="shrink-0">{formatRelativeTime(activity.createdAt)}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+            {dashboardActivity && dashboardActivity.length > 0 && (
+              <div className="border-t border-border bg-muted/10 p-2.5 text-center transition-colors hover:bg-muted/30">
+                <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground">
+                  View full log
+                </a>
+              </div>
+            )}
           </div>
         </div>
 

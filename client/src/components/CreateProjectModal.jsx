@@ -7,7 +7,7 @@ import Input from './Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './Card';
 
 const CreateProjectModal = ({ isOpen, onClose }) => {
-  const { createProject, isLoading, error, clearError } = useProjectStore();
+  const { createProject, isLoading } = useProjectStore();
   const navigate = useNavigate();
 
   const {
@@ -21,10 +21,9 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (isOpen) {
-      clearError();
       reset({ name: '', description: '', includeReadme: false });
     }
-  }, [isOpen, clearError, reset]);
+  }, [isOpen, reset]);
 
   const onSubmit = async (data) => {
     try {
@@ -37,7 +36,6 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
   };
 
   const handleCancel = () => {
-    clearError();
     onClose();
   };
 
@@ -46,13 +44,6 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="w-full max-w-2xl">
-        {error && (
-          <div className="alert-error flex justify-between items-center mb-6">
-            <span>{error}</span>
-            <button onClick={clearError} className="text-red-400 hover:text-red-300">×</button>
-          </div>
-        )}
-
         <Card className="shadow-lg border-gray-800">
           <CardHeader>
             <CardTitle>Create New Project</CardTitle>

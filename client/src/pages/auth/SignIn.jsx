@@ -17,14 +17,12 @@ export default function SignIn({ className, ...props }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
   
   const login = useAuthStore((state) => state.login)
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
     setIsLoading(true)
 
     try {
@@ -32,7 +30,7 @@ export default function SignIn({ className, ...props }) {
       login(result.user)
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong. Please try again.')
+      console.error(err);
     } finally {
       setIsLoading(false)
     }
@@ -48,12 +46,6 @@ export default function SignIn({ className, ...props }) {
               Enter your email below to login to your account
             </p>
           </div>
-          
-          {error && (
-            <div className="text-sm font-medium text-destructive text-center p-2 bg-destructive/10 rounded-md">
-              {error}
-            </div>
-          )}
 
           <Field>
             <FieldLabel htmlFor="email">Email</FieldLabel>

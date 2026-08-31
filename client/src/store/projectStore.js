@@ -27,7 +27,11 @@ const useProjectStore = create((set, get) => ({
   },
 
   fetchProjectById: async (projectId) => {
-    set({ isLoading: true, error: null, currentProject: null });
+    set((state) => ({ 
+      isLoading: true, 
+      error: null, 
+      currentProject: state.currentProject?.id === projectId ? state.currentProject : null 
+    }));
     try {
       const response = await getProjectByIdApi(projectId);
       set({ currentProject: response.project, isLoading: false });

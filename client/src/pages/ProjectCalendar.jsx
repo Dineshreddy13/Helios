@@ -7,7 +7,6 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import useProjectStore from '../store/projectStore';
 import useListStore from '../store/listStore';
 import useTaskStore from '../store/taskStore';
-import Navbar from '../components/Navbar';
 
 const locales = {
   'en-US': enUS,
@@ -137,7 +136,6 @@ const ProjectCalendar = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="flex flex-col px-4 sm:px-6 pt-8 pb-12 min-h-[calc(100vh-65px)] w-full max-w-[1600px] mx-auto">
 
 
@@ -148,51 +146,49 @@ const ProjectCalendar = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 h-[700px]">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 h-[calc(100vh-140px)] min-h-[700px]">
           {/* Unscheduled Tasks Sidebar */}
-          <div className="xl:col-span-1 flex flex-col h-full">
-            <div className="bg-card rounded-xl border shadow-sm flex flex-col h-full overflow-hidden">
-              <div className="p-4 border-b bg-muted/30">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                  Unscheduled Tasks
-                  <span className="bg-muted text-muted-foreground text-xs py-0.5 px-2 rounded-full">
-                    {unscheduledTasks.length}
-                  </span>
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">Tasks without a due date</p>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {unscheduledTasks.length === 0 ? (
-                  <div className="text-center text-muted-foreground text-sm py-8">
-                    No unscheduled tasks found.
-                  </div>
-                ) : (
-                  unscheduledTasks.map(task => (
-                    <div 
-                      key={task.id} 
-                      onClick={() => navigate(`/projects/${projectId}/tasks/${task.id}`)}
-                      className="p-3 rounded-lg border bg-background hover:border-primary/50 cursor-pointer transition-colors group flex flex-col gap-2 shadow-sm"
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <h4 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors">
-                          {task.title}
-                        </h4>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${getStatusColor(task.status)} bg-opacity-15 text-opacity-90`}>
-                           {task.status}
-                        </span>
-                      </div>
+          <div className="xl:col-span-1 flex flex-col h-full gap-4">
+            <div>
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                Unscheduled Tasks
+                <span className="bg-muted text-muted-foreground text-xs py-0.5 px-2 rounded-full">
+                  {unscheduledTasks.length}
+                </span>
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Tasks without a due date</p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+              {unscheduledTasks.length === 0 ? (
+                <div className="text-muted-foreground text-sm py-4">
+                  No unscheduled tasks found.
+                </div>
+              ) : (
+                unscheduledTasks.map(task => (
+                  <div 
+                    key={task.id} 
+                    onClick={() => navigate(`/projects/${projectId}/tasks/${task.id}`)}
+                    className="p-3 rounded-lg border bg-background hover:border-primary/50 cursor-pointer transition-colors group flex flex-col gap-2 shadow-sm"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <h4 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors">
+                        {task.title}
+                      </h4>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${getStatusColor(task.status)} bg-opacity-15 text-opacity-90`}>
+                         {task.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Main Calendar Area */}
-          <div className="xl:col-span-3 bg-card rounded-xl border shadow-sm p-4 h-full flex flex-col">
+          <div className="xl:col-span-3 h-full flex flex-col">
             <Calendar
               localizer={localizer}
               events={scheduledTasks}
@@ -203,7 +199,7 @@ const ProjectCalendar = () => {
               onSelectEvent={handleSelectEvent}
               eventPropGetter={eventPropGetter}
               views={['month', 'week', 'day']}
-              className="helios-calendar"
+              className="helios-calendar h-full w-full"
               date={currentDate}
               onNavigate={handleNavigate}
               view={currentView}
@@ -213,7 +209,6 @@ const ProjectCalendar = () => {
               }}
             />
           </div>
-
         </div>
       </div>
     </div>
