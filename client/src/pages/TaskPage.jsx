@@ -4,6 +4,14 @@ import { ArrowRight01Icon, File02Icon, Cancel01Icon, CheckmarkCircle02Icon, Circ
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { PRIORITY_MAP } from '../components/board/TaskCard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import useProjectStore from '../store/projectStore';
 import useListStore from '../store/listStore';
 import useTaskStore from '../store/taskStore';
@@ -264,6 +272,31 @@ const TaskPage = () => {
                     </div>
                   </div>
                 )}
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger render={
+                    <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full border-transparent transition-opacity hover:opacity-80">
+                      {(() => {
+                        const pInfo = PRIORITY_MAP[task.priority || 'medium'];
+                        const Icon = pInfo.icon;
+                        return (
+                          <Badge variant={pInfo.variant} className="flex items-center gap-1.5 cursor-pointer">
+                            <Icon size={14} />
+                            {pInfo.label}
+                          </Badge>
+                        );
+                      })()}
+                    </button>
+                  } />
+                  <DropdownMenuContent align="start">
+                    {Object.entries(PRIORITY_MAP).map(([key, { label, icon: Icon, color }]) => (
+                      <DropdownMenuItem key={key} onClick={() => updateTask(task.id, { priority: key })}>
+                        <Icon className={cn("mr-2 h-4 w-4", color)} />
+                        {label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 <Dialog open={openReminder} onOpenChange={setOpenReminder}>
                   <DialogTrigger asChild>

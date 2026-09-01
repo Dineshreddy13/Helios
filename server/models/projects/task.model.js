@@ -14,6 +14,7 @@ export const tasks = pgTable("tasks", {
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").$type().notNull().default("pending"),
+  priority: text("priority").$type().notNull().default("medium"),
   tags: text("tags").array(),
   dueDate: timestamp("due_date", { withTimezone: true }),
   files: jsonb("files").$type(),
