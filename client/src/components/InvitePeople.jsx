@@ -3,13 +3,13 @@ import useInvitationStore from '../store/invitationStore';
 import { searchUsersApi } from '../api/user.api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Command, 
-  CommandInput, 
-  CommandList, 
-  CommandEmpty, 
-  CommandGroup, 
-  CommandItem 
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem
 } from '@/components/ui/command';
 import {
   Item,
@@ -27,10 +27,10 @@ import {
 } from "@/components/ui/dialog";
 
 const InvitePeople = ({ projectId }) => {
-  const { 
-    projectMembers, 
-    projectInvitations, 
-    fetchProjectInvitations, 
+  const {
+    projectMembers,
+    projectInvitations,
+    fetchProjectInvitations,
     inviteUser
   } = useInvitationStore();
 
@@ -62,7 +62,7 @@ const InvitePeople = ({ projectId }) => {
         const response = await searchUsersApi(debouncedQuery);
         const memberIds = new Set(projectMembers.map(m => m.user.id));
         const invitedIds = new Set(projectInvitations.map(i => i.invitedUser.id));
-        
+
         const filtered = response.users.filter(u => !memberIds.has(u.id) && !invitedIds.has(u.id));
         setSearchResults(filtered);
       } catch (err) {
@@ -85,7 +85,7 @@ const InvitePeople = ({ projectId }) => {
     setInvitingId(userId);
     try {
       await inviteUser(projectId, userId);
-      setSearchQuery(''); 
+      setSearchQuery('');
       setSearchResults([]);
     } catch (err) {
       console.error(err);
@@ -101,15 +101,15 @@ const InvitePeople = ({ projectId }) => {
           <h3 className="text-lg font-semibold">Invite people</h3>
           <p className="text-sm text-muted-foreground">Add new members to collaborate on this project.</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>Invite</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden" showCloseButton={false}>
-            <Command className="border-none">
-              <CommandInput 
-                placeholder="Search by username or email..." 
+            <Command className="border-none" shouldFilter={false}>
+              <CommandInput
+                placeholder="Search by username or email..."
                 value={searchQuery}
                 onValueChange={setSearchQuery}
                 className="border-none focus:ring-0"
@@ -128,8 +128,8 @@ const InvitePeople = ({ projectId }) => {
                             <span className="font-medium leading-none">{user.username}</span>
                             <span className="text-xs text-muted-foreground">{user.email}</span>
                           </div>
-                          <Button 
-                            variant="secondary" 
+                          <Button
+                            variant="secondary"
                             size="sm"
                             className="h-7 text-xs px-3"
                             onClick={(e) => {

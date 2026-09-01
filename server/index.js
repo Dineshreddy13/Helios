@@ -23,9 +23,12 @@ import { initSocket } from "./sockets/index.js";
 import "./jobs/workers/email.worker.js";
 import "./jobs/workers/reminder.worker.js";
 import logger from "./utils/logger.js";
+import { ApiError } from "./utils/ApiError.js";
+
+// Middlewares
 import { httpLogger } from "./middlewares/logger.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
-import { ApiError } from "./utils/ApiError.js";
+import { sessionMiddleware } from "./config/session.js";
 
 const app = express();
 app.set("trust proxy", 1); // Trust first proxy (Render load balancer)
@@ -33,13 +36,14 @@ const httpServer = http.createServer(app);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Security middlewares
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(httpLogger);
 
-import { sessionMiddleware } from "./config/session.js";
+// Session middleware for authentication
 app.use(sessionMiddleware);
 app.use(
   cors({
@@ -49,7 +53,6 @@ app.use(
 );
 
 app.use("/api/v1", apiRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: APP_MSG.HEALTH_CHECK_SUCCESS });

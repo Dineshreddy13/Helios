@@ -26,14 +26,15 @@ export const uploadTaskFiles = async (taskId, userId, uploadedFiles) => {
 
     if (currentFiles.length + uploadedFiles.length > 5) {
         // Clean up the newly uploaded files since we're rejecting
-        deleteFiles(uploadedFiles.map(f => f.path));
+        await deleteFiles(uploadedFiles.map(f => f.filename));
         throw new ApiError(400, TASK_MSG.FILE_LIMIT_EXCEEDED);
     }
 
     const newFileEntries = uploadedFiles.map((f) => ({
         id: uuidv4(),
+        publicId: f.filename, // Cloudinary gives public_id in f.filename
         name: f.originalname,
-        url: `/uploads/tasks/${f.filename}`,
+        url: f.path, // Cloudinary gives URL in f.path
         size: f.size,
         mimeType: f.mimetype,
     }));
@@ -77,8 +78,10 @@ export const deleteTaskFile = async (taskId, userId, fileId) => {
         throw new ApiError(404, TASK_MSG.FILE_NOT_FOUND);
     }
 
-    // Delete from disk
-    deleteFile(fileToDelete.url);
+    // Delete from Cloudinary
+    if (fileToDelete.publicId) {
+        await deleteFile(fileToDelete.publicId);
+    }
 
     const updatedFiles = currentFiles.filter((f) => f.id !== fileId);
 

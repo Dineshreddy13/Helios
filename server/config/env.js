@@ -17,6 +17,9 @@ const envSchema = z.object({
     PASSWORD_RESET_TTL: z.string().default("900"),
     NODE_ENV: z.enum(["development", "production"]),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+    CLOUDINARY_CLOUD_NAME: z.string().min(1, "CLOUDINARY_CLOUD_NAME is required"),
+    CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
+    CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -39,5 +42,8 @@ export const {
     BREVO_SENDER_NAME,
     OTP_TTL,
     PASSWORD_RESET_TTL,
-    LOG_LEVEL
+    LOG_LEVEL,
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
 } = parsedEnv.data;

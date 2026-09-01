@@ -1,25 +1,17 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Ensure the uploads directory exists
-const uploadDir = path.join(__dirname, "..", "uploads", "tasks");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (_req, _file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (_req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `${uuidv4()}${ext}`);
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "helios/tasks",
+        resource_type: "auto",
+        public_id: (_req, file) => {
+            const name = file.originalname.split('.').slice(0, -1).join('.');
+            return `${uuidv4()}-${name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        },
     },
 });
 
