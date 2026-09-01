@@ -202,7 +202,7 @@ const Navbar = () => {
             </div>
             
             <Drawer swipeDirection="right">
-              <DrawerTrigger asChild>
+              <DrawerTrigger render={
                 <button 
                   className="relative text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center size-8"
                   title="Notifications"
@@ -214,7 +214,7 @@ const Navbar = () => {
                     </span>
                   )}
                 </button>
-              </DrawerTrigger>
+              } />
               <DrawerContent>
                 <DrawerHeader>
                   <DrawerTitle>Notifications</DrawerTitle>

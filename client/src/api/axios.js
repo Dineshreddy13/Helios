@@ -28,14 +28,14 @@ api.interceptors.response.use(
     } else if (error.response) {
       // Don't show toast for 401 on the /me endpoint as it's an expected failure for unauthenticated users
       if (!(error.response.status === 401 && requestUrl.includes("/api/v1/auth/me"))) {
-        toast({
+        toast.add({
           title: "Error",
           description: error.response.data?.message || error.message || "An unexpected error occurred",
           type: "error",
         });
       }
     } else if (error.request) {
-      toast({
+      toast.add({
         title: "Network Error",
         description: "Could not connect to the server.",
         type: "error",

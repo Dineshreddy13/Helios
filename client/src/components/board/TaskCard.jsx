@@ -13,7 +13,21 @@ import useTaskStore from '../../store/taskStore';
 import useAuthStore from '../../store/authStore';
 import useProjectStore from '../../store/projectStore';
 import { getProjectMembersApi } from '../../api/invitation.api';
-import { Delete02Icon, CheckmarkCircle02Icon, Tag01Icon, Cancel01Icon, Calendar01Icon, CheckmarkBadge01Icon, ArrowUpDownIcon } from 'hugeicons-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Delete02Icon, CheckmarkCircle02Icon, Tag01Icon, Cancel01Icon, Calendar01Icon, CheckmarkBadge01Icon, ArrowUpDownIcon, Alert01Icon, ArrowUp01Icon, ArrowRight01Icon, ArrowDown01Icon } from 'hugeicons-react';
+
+export const PRIORITY_MAP = {
+  urgent: { label: 'Urgent', color: 'text-destructive', variant: 'destructive', icon: Alert01Icon },
+  high: { label: 'High', color: 'text-primary', variant: 'default', icon: ArrowUp01Icon },
+  medium: { label: 'Medium', color: 'text-secondary-foreground', variant: 'secondary', icon: ArrowRight01Icon },
+  low: { label: 'Low', color: 'text-muted-foreground', variant: 'outline', icon: ArrowDown01Icon },
+};
 
 // ── TaskEditModal ─────────────────────────────────────────────────────────
 // Shows only title, tags, and assignee — as per owner edit scope
@@ -22,6 +36,7 @@ const TaskEditModal = ({ task, onClose }) => {
   const [members, setMembers] = useState([]);
   const [title, setTitle] = useState(task.title);
   const [assigneeId, setAssigneeId] = useState(task.assignee?.id || '');
+  const [priority, setPriority] = useState(task.priority || 'medium');
   const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate) : null);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState(task.tags || []);
@@ -75,6 +90,7 @@ const TaskEditModal = ({ task, onClose }) => {
         assigneeId: assigneeId || null,
         tags: tags.length > 0 ? tags : null,
         dueDate: dueDate ? dueDate.toISOString() : null,
+        priority,
       });
       onClose();
     } catch (err) {
@@ -149,7 +165,7 @@ const TaskEditModal = ({ task, onClose }) => {
             <p className="text-xs text-muted-foreground">Up to 10 tags · press Enter or Tab to add</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Assignee */}
             <div className="space-y-2 flex flex-col">
               <Label>Assignee</Label>
@@ -243,6 +259,34 @@ const TaskEditModal = ({ task, onClose }) => {
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-2 flex flex-col">
+              <Label>Priority</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start" disabled={isSubmitting}>
+                    {(() => {
+                      const PIcon = PRIORITY_MAP[priority].icon;
+                      return (
+                        <>
+                          <PIcon className={cn("mr-2 h-4 w-4", PRIORITY_MAP[priority].color)} />
+                          {PRIORITY_MAP[priority].label}
+                        </>
+                      );
+                    })()}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                  {Object.entries(PRIORITY_MAP).map(([key, { label, icon: Icon, color }]) => (
+                    <DropdownMenuItem key={key} onClick={() => setPriority(key)}>
+                      <Icon className={cn("mr-2 h-4 w-4", color)} />
+                      {label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -347,7 +391,19 @@ const TaskCard = memo(({ task }) => {
           </div>
         )}
 
-        <div className="mt-1 flex items-center justify-end">
+        <div className="mt-1 flex items-center justify-between">
+          <div className="flex items-center">
+            {(() => {
+              const pInfo = PRIORITY_MAP[task.priority || 'medium'];
+              const Icon = pInfo.icon;
+              return (
+                <Badge variant={pInfo.variant} className="gap-1 px-1.5 py-0.5 text-[10px]" title={`Priority: ${pInfo.label}`}>
+                  <Icon size={10} />
+                  {pInfo.label}
+                </Badge>
+              );
+            })()}
+          </div>
           {task.assignee ? (
             <div className="flex items-center gap-1.5" title={`Assigned to ${task.assignee.username}`}>
               <div className="w-5 h-5 rounded-full bg-primary/20 text-primary border border-primary/30 flex items-center justify-center text-[9px] font-bold">
