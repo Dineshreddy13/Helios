@@ -152,6 +152,7 @@ export const VALIDATION_MSG = {
     TASK_DESC_MAX: "Task description must be at most 2000 characters long.",
     TASK_DUE_DATE_INVALID: "Due date must be a valid ISO date-time string.",
     TASK_STATUS_INVALID: "Status must be either 'pending' or 'completed'.",
+    TASK_PRIORITY_INVALID: "Priority must be 'urgent', 'high', 'medium', or 'low'.",
     TASK_TAG_MAX_LENGTH: "Each tag must be at most 50 characters long.",
     TASK_TAGS_MAX: "A task can have at most 10 tags.",
     TASK_TITLE_MAX: "Task title must be at most 200 characters long.",

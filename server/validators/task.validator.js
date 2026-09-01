@@ -11,6 +11,10 @@ const statusSchema = z
   .enum(["pending", "completed"], { error: VALIDATION_MSG.TASK_STATUS_INVALID })
   .optional();
 
+const prioritySchema = z
+  .enum(["urgent", "high", "medium", "low"], { error: VALIDATION_MSG.TASK_PRIORITY_INVALID })
+  .optional();
+
 const tagsSchema = z
   .array(
     z.string().trim().max(50, VALIDATION_MSG.TASK_TAG_MAX_LENGTH)
@@ -43,6 +47,7 @@ export const createTaskSchema = z.object({
     .nullable()
     .optional(),
   status: statusSchema,
+  priority: prioritySchema,
   tags: tagsSchema,
   dueDate: dueDateSchema,
   reminderAt: reminderAtSchema,
@@ -70,6 +75,7 @@ export const updateTaskSchema = z
       .nullable()
       .optional(),
     status: statusSchema,
+    priority: prioritySchema,
     tags: tagsSchema,
     dueDate: dueDateSchema,
     reminderAt: reminderAtSchema,

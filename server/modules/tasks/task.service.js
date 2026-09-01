@@ -24,6 +24,7 @@ const buildTaskSelect = () => ({
     title: tasks.title,
     description: tasks.description,
     status: tasks.status,
+    priority: tasks.priority,
     tags: tasks.tags,
     dueDate: tasks.dueDate,
     reminderAt: tasks.reminderAt,
@@ -60,7 +61,7 @@ const reindexList = async (tx, listId) => {
 };
 
 // ── createTask ─────────────────────────────────────────────────────────────
-export const createTask = async (listId, userId, { title, description, assigneeId, status, tags, dueDate, reminderAt }) => {
+export const createTask = async (listId, userId, { title, description, assigneeId, status, priority, tags, dueDate, reminderAt }) => {
     // 1. fetch the list to get projectId
     const [list] = await db
         .select()
@@ -100,6 +101,7 @@ export const createTask = async (listId, userId, { title, description, assigneeI
             title,
             description,
             status: status ?? "pending",
+            priority: priority ?? "medium",
             tags: tags ?? null,
             dueDate: dueDate ? new Date(dueDate) : null,
             reminderAt: reminderAt ? new Date(reminderAt) : null,
@@ -170,7 +172,7 @@ export const getTasksForProject = async (projectId, userId) => {
 };
 
 // ── updateTask ─────────────────────────────────────────────────────────────
-export const updateTask = async (taskId, userId, { title, description, assigneeId, status, tags, dueDate, reminderAt }) => {
+export const updateTask = async (taskId, userId, { title, description, assigneeId, status, priority, tags, dueDate, reminderAt }) => {
     // 1. fetch task
     const [existing] = await db
         .select()
@@ -199,6 +201,7 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     if (description !== undefined) patch.description = description;
     if (assigneeId !== undefined) patch.assigneeId = assigneeId; // allows null to unassign
     if (status !== undefined) patch.status = status;
+    if (priority !== undefined) patch.priority = priority;
     if (tags !== undefined) patch.tags = tags;
     if (dueDate !== undefined) patch.dueDate = dueDate !== null ? new Date(dueDate) : null;
     if (reminderAt !== undefined) {
@@ -222,6 +225,7 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
     if (description !== undefined && description !== existing.description) changedFields.push("description");
     if (assigneeId !== undefined && assigneeId !== existing.assigneeId) changedFields.push("assignee");
     if (status !== undefined && status !== existing.status) changedFields.push("status");
+    if (priority !== undefined && priority !== existing.priority) changedFields.push("priority");
     if (tags !== undefined) changedFields.push("tags");
     if (dueDate !== undefined) changedFields.push("dueDate");
     if (reminderAt !== undefined) changedFields.push("reminderAt");
