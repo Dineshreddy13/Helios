@@ -39,6 +39,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(httpLogger);
 
+import { sessionMiddleware } from "./config/session.js";
+app.use(sessionMiddleware);
 app.use(
   cors({
     origin: CLIENT_URL,

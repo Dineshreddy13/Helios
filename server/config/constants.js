@@ -1,5 +1,5 @@
 // SYSTEM CONFIGURATION
-export const COOKIE_NAME = "auth_token";
+export const COOKIE_NAME = "helios.sid";
 
 export const OTP_CONFIG = {
     PREFIX: {
