@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 import { eq, or } from "drizzle-orm";
-import { db } from "../../../database/db.js";
-import { users } from "../../../models/auth/user.model.js";
-import { ApiError } from "../../../utils/ApiError.js";
-import { AUTH_MSG, OTP_CONFIG } from "../../../config/constants.js";
+import { db } from "#database/db.js";
+import { users } from "#models/auth/user.model.js";
+import { ApiError } from "#utils/ApiError.js";
+import { AUTH_MSG, OTP_CONFIG } from "#config/constants.js";
 import { sendAndStoreOtp } from "./verification.service.js";
 import { storeOtpMeta } from "../utils/otp.utils.js";
 

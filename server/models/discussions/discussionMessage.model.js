@@ -1,6 +1,6 @@
 import { boolean, pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
 import { users } from "../auth/user.model.js";
-import { projects } from "./project.model.js";
+import { projects } from "../projects/project.model.js";
 
 export const discussionMessages = pgTable("discussion_messages", {
   id: uuid("id").defaultRandom().primaryKey(),

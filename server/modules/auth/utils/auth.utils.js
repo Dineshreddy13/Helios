@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import { JWT_EXPIRES_IN, JWT_SECRET, NODE_ENV } from "../../../config/env.js";
-import { COOKIE_NAME } from "../../../config/constants.js";
+import { JWT_EXPIRES_IN, JWT_SECRET, NODE_ENV } from "#config/env.js";
+import { COOKIE_NAME } from "#config/constants.js";
 
 export const sanitizeUser = (user) => ({
     id: user.id,

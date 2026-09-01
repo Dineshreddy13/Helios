@@ -1,8 +1,8 @@
-import logger from "../utils/logger.js";
+import logger from "#utils/logger.js";
 import z, { ZodError } from "zod";
-import { ApiError } from "../utils/ApiError.js";
-import { AUTH_MSG } from "../config/constants.js";
-import { NODE_ENV } from "../config/env.js";
+import { ApiError } from "#utils/ApiError.js";
+import { AUTH_MSG } from "#config/constants.js";
+import { NODE_ENV } from "#config/env.js";
 
 export const errorHandler = (err, req, res, next) => {
     let statusCode = err.statusCode || 500;

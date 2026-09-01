@@ -1,12 +1,12 @@
 import { relations } from "drizzle-orm";
-import { users } from "../auth/user.model.js";
-import { projects } from "./project.model.js";
-import { projectMembers } from "./projectMember.model.js";
-import { projectInvitations } from "./projectInvitation.model.js";
-import { lists } from "./list.model.js";
-import { tasks } from "./task.model.js";
-import { activityLogs } from "./activityLog.model.js";
-import { discussionMessages } from "./discussionMessage.model.js";
+import { projects } from "./projects/project.model.js";
+import { projectMembers } from "./projects/projectMember.model.js";
+import { projectInvitations } from "./projects/projectInvitation.model.js";
+import { lists } from "./lists/list.model.js";
+import { tasks } from "./tasks/task.model.js";
+import { activityLogs } from "./activity/activityLog.model.js";
+import { discussionMessages } from "./discussions/discussionMessage.model.js";
+import { users } from "./auth/user.model.js";
 
 // ── users ──────────────────────────────────────────────────────────────────
 export const usersRelations = relations(users, ({ many }) => ({

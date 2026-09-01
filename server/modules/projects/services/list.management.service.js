@@ -1,11 +1,11 @@
 import { and, asc, eq, max } from "drizzle-orm";
-import { LIST_MSG, PROJECT_MSG } from "../../config/constants.js";
-import { db } from "../../database/db.js";
-import { lists, projectMembers } from "../../models/index.js";
-import { logActivity } from "../activity/activity.service.js";
-import { ApiError } from "../../utils/ApiError.js";
-import { getCache, setCache, delCache } from "../../utils/cache.js";
-import { requireProjectMember } from "../../utils/permissions.js";
+import { LIST_MSG, PROJECT_MSG } from "#config/constants.js";
+import { db } from "#database/db.js";
+import { lists, projectMembers } from "#models/index.js";
+import { logActivity } from "../../activity/services/activity.service.js";
+import { ApiError } from "#utils/ApiError.js";
+import { getCache, setCache, delCache } from "#utils/cache.js";
+import { requireProjectMember } from "../utils/permissions.js";
 
 // ── createList ─────────────────────────────────────────────────────────────
 export const createList = async (projectId, userId, { name }) => {

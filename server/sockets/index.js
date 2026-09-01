@@ -2,10 +2,10 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { eq, and } from "drizzle-orm";
 import { parse as parseCookies } from "cookie";
-import { db } from "../database/db.js";
-import { users, projectMembers } from "../models/index.js";
-import { JWT_SECRET, CLIENT_URL } from "../config/env.js";
-import logger from "../utils/logger.js";
+import { db } from "#database/db.js";
+import { users, projectMembers } from "#models/index.js";
+import { JWT_SECRET, CLIENT_URL } from "#config/env.js";
+import logger from "#utils/logger.js";
 
 let io;
 

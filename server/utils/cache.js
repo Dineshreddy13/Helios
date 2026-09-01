@@ -1,4 +1,4 @@
-import { redis } from "../config/redis.js";
+import { redis } from "#config/redis.js";
 import logger from "./logger.js";
 
 export const getCache = async (key) => {

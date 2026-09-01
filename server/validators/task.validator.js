@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { VALIDATION_MSG } from "../config/constants.js";
+import { VALIDATION_MSG } from "#config/constants.js";
 
 const titleSchema = z
   .string()
@@ -42,7 +42,6 @@ export const createTaskSchema = z.object({
     .max(2000, VALIDATION_MSG.TASK_DESC_MAX)
     .optional(),
   assigneeId: z
-    .string()
     .uuid(VALIDATION_MSG.INVALID_ASSIGNEE_ID)
     .nullable()
     .optional(),
@@ -70,7 +69,6 @@ export const updateTaskSchema = z
       .max(2000, VALIDATION_MSG.TASK_DESC_MAX)
       .optional(),
     assigneeId: z
-      .string()
       .uuid(VALIDATION_MSG.INVALID_ASSIGNEE_ID)
       .nullable()
       .optional(),

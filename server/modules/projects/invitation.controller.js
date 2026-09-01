@@ -1,12 +1,12 @@
 import {
     getMyInvitations,
+    respondToInvitation,
+    inviteUserToProject as inviteUser,
     getProjectInvitations,
     getProjectMembers,
-    inviteUserToProject,
-    respondToInvitation,
-} from "./invitation.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+} from "./services/project.invitation.service.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const inviteUserHandler = asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;

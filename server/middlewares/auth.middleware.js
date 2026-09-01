@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
-import { db } from "../database/db.js";
-import { users } from "../models/index.js";
-import { getCache, setCache } from "../utils/cache.js";
-import { JWT_SECRET } from "../config/env.js";
-import { AUTH_MSG } from "../config/constants.js";
+import { db } from "#database/db.js";
+import { users } from "#models/index.js";
+import { getCache, setCache } from "#utils/cache.js";
+import { JWT_SECRET } from "#config/env.js";
+import { AUTH_MSG } from "#config/constants.js";
 
 const getTokenFromRequest = (req) => {
   const bearerToken = req.headers.authorization?.startsWith("Bearer ")

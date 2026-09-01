@@ -1,10 +1,10 @@
 import { getCurrentUser, logout, login } from "./services/auth.service.js"
-import { ApiResponse } from "../../utils/ApiResponse.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 import { register } from "./services/registration.service.js";
 import { verifyOtp, resendOtp } from "./services/verification.service.js";
 import { forgotPasswordService } from "./services/forgot.password.service.js";
 import { resetPasswordService } from "./services/reset.password.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
 
 const sendAuthResponse = (res, payload, statusCode = 200) => {
   const cookiePayload = { httpOnly: true, path: "/" };

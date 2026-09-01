@@ -1,7 +1,7 @@
 import { randomInt } from "crypto";
-import { OTP_CONFIG } from "../../../config/constants.js";
-import { getCache, setCache, delCache } from "../../../utils/cache.js";
-import { OTP_TTL } from "../../../config/env.js";
+import { OTP_CONFIG } from "#config/constants.js";
+import { getCache, setCache, delCache } from "#utils/cache.js";
+import { OTP_TTL } from "#config/env.js";
 
 const OTP_EXPIRY_SECONDS = Number(OTP_TTL);
 

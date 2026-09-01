@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { AUTH_MSG } from "../../../config/constants.js";
-import { getCache, delCache } from "../../../utils/cache.js";
-import { users } from "../../../models/index.js";
-import { db } from "../../../database/db.js";
-import { ApiError } from "../../../utils/ApiError.js";
+import { AUTH_MSG } from "#config/constants.js";
+import { getCache, delCache } from "#utils/cache.js";
+import { users } from "#models/index.js";
+import { db } from "#database/db.js";
+import { ApiError } from "#utils/ApiError.js";
 
 export const resetPasswordService = async ({ token, password }) => {
     const userId = await getCache(`password-reset:${token}`);

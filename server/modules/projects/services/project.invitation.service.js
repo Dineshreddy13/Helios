@@ -1,15 +1,15 @@
 import { and, eq } from "drizzle-orm";
-import { INVITATION_MSG, PROJECT_MSG } from "../../config/constants.js";
-import { db } from "../../database/db.js";
+import { INVITATION_MSG, PROJECT_MSG } from "#config/constants.js";
+import { db } from "#database/db.js";
 import {
     projectInvitations,
     projectMembers,
     projects,
     users,
-} from "../../models/index.js";
-import { logActivity } from "../activity/activity.service.js";
-import { ApiError } from "../../utils/ApiError.js";
-import { getMembership, requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../../utils/permissions.js";
+} from "#models/index.js";
+import { logActivity } from "../../activity/services/activity.service.js";
+import { ApiError } from "#utils/ApiError.js";
+import { getMembership, requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../utils/permissions.js";
 
 // invited user alias (drizzle needs aliased table for multiple joins on same table)
 import { alias } from "drizzle-orm/pg-core";

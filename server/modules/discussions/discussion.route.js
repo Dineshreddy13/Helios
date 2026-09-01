@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
-import { sendMessageSchema, editMessageSchema } from "../../validators/discussion.validator.js";
-import { projectIdParamSchema, messageIdParamSchema } from "../../validators/common.validator.js";
+import { sendMessageSchema, editMessageSchema } from "#validators/discussion.validator.js";
+import { projectIdParamSchema, messageIdParamSchema } from "#validators/common.validator.js";
 import {
     getMessagesHandler,
     sendMessageHandler,

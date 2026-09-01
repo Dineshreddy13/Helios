@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { AUTH_MSG, COOKIE_NAME } from "../../../config/constants.js";
-import { db } from "../../../database/db.js";
-import { users } from "../../../models/index.js";
-import { ApiError } from "../../../utils/ApiError.js";
+import { AUTH_MSG, COOKIE_NAME } from "#config/constants.js";
+import { db } from "#database/db.js";
+import { users } from "#models/index.js";
+import { ApiError } from "#utils/ApiError.js";
 import { authCookieOptions, buildAuthResponse, sanitizeUser } from "../utils/auth.utils.js";
 
 export const login = async ({ email, password }) => {

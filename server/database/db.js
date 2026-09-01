@@ -1,9 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { DATABASE_URL, NODE_ENV } from "../config/env.js";
-import * as schema from "../models/index.js";
-import { DB_MSG } from "../config/constants.js";
-import logger from "../utils/logger.js";
+import { DATABASE_URL, NODE_ENV } from "#config/env.js";
+import * as schema from "#models/index.js";
+import { DB_MSG } from "#config/constants.js";
+import logger from "#utils/logger.js";
 
 const { Pool } = pg;
 export const pool = new Pool({ 

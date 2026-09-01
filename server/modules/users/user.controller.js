@@ -1,6 +1,6 @@
 import { searchUsers } from "./user.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const searchUsersHandler = asyncHandler(async (req, res, next) => {
     const { q } = req.validated.query;

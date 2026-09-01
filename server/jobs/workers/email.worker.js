@@ -1,8 +1,8 @@
 import { Worker } from "bullmq";
-import { redis } from "../../config/redis.js";
-import { sendEmail } from "../../config/mail.js";
-import { renderTemplate } from "../../utils/templateRenderer.js";
-import logger from "../../utils/logger.js";
+import { redis } from "#config/redis.js";
+import { sendEmail } from "#config/mail.js";
+import { renderTemplate } from "#utils/templateRenderer.js";
+import logger from "#utils/logger.js";
 
 const processEmailJob = async (job) => {
   const { to, subject, template, data } = job.data;
