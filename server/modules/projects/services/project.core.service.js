@@ -1,18 +1,18 @@
 import { and, desc, eq } from "drizzle-orm";
-import { PROJECT_MSG } from "../../config/constants.js";
-import { db } from "../../database/db.js";
+import { PROJECT_MSG } from "#config/constants.js";
+import { db } from "#database/db.js";
 import {
     lists,
     projectInvitations,
     projectMembers,
     projects,
     tasks,
-} from "../../models/index.js";
-import { logActivity } from "../activity/activity.service.js";
-import { ApiError } from "../../utils/ApiError.js";
-import { getCache, setCache, delCache } from "../../utils/cache.js";
-import { requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../../utils/permissions.js";
-import { SocketService } from "../../sockets/socket.service.js";
+} from "#models/index.js";
+import { logActivity } from "../../activity/services/activity.service.js";
+import { ApiError } from "#utils/ApiError.js";
+import { getCache, setCache, delCache } from "#utils/cache.js";
+import { requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../utils/permissions.js";
+import { SocketService } from "#sockets/socket.service.js";
 
 // ── createProject ──────────────────────────────────────────────────────────
 export const createProject = async (userId, { name, description, includeReadme }) => {

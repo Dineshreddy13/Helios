@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { AUTH_MSG, COOKIE_NAME } from "../../../config/constants.js";
-import { db } from "../../../database/db.js";
-import { users } from "../../../models/index.js";
-import { ApiError } from "../../../utils/ApiError.js";
-import { authCookieOptions, buildAuthResponse, sanitizeUser } from "../utils/auth.utils.js";
+import { AUTH_MSG } from "#config/constants.js";
+import { db } from "#database/db.js";
+import { users } from "#models/index.js";
+import { ApiError } from "#utils/ApiError.js";
+import { sanitizeUser } from "../utils/auth.utils.js";
 
 export const login = async ({ email, password }) => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -31,7 +31,7 @@ export const login = async ({ email, password }) => {
 
     return {
         message: AUTH_MSG.LOGIN_SUCCESS,
-        ...buildAuthResponse(user),
+        user: sanitizeUser(user),
     };
 };
 
@@ -39,11 +39,14 @@ export const getCurrentUser = async (user) => ({
     user: sanitizeUser(user),
 });
 
-export const logout = async () => ({
-    message: AUTH_MSG.LOGOUT_SUCCESS,
-    cookieName: COOKIE_NAME,
-    cookieOptions: {
-        ...authCookieOptions,
-        maxAge: 0,
-    },
-});
+export const logout = async (req) => {
+    return new Promise((resolve, reject) => {
+        req.session.destroy((err) => {
+            if (err) {
+                reject(new ApiError(500, "Could not log out"));
+            } else {
+                resolve({ message: AUTH_MSG.LOGOUT_SUCCESS });
+            }
+        });
+    });
+};

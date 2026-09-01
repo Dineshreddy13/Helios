@@ -1,13 +1,13 @@
 import { randomUUID } from 'crypto'
 import { clearOtp, clearOtpMeta, generateOtp, getOtpExpiryLabel, readOtp, readOtpMeta, storeOtp, storeOtpMeta } from "../utils/otp.utils.js";
 import { sendEmail } from "../../../shared/services/email.service.js";
-import { AUTH_MSG, MAIL_MSG, OTP_CONFIG } from "../../../config/constants.js";
-import { db } from "../../../database/db.js";
-import { users } from "../../../models/index.js";
+import { AUTH_MSG, MAIL_MSG, OTP_CONFIG } from "#config/constants.js";
+import { db } from "#database/db.js";
+import { users } from "#models/index.js";
 import { eq } from "drizzle-orm";
-import { buildAuthResponse, sanitizeUser } from "../utils/auth.utils.js";
-import { ApiError } from "../../../utils/ApiError.js";
-import { OTP_TTL } from "../../../config/env.js";
+import { sanitizeUser } from "../utils/auth.utils.js";
+import { ApiError } from "#utils/ApiError.js";
+import { OTP_TTL } from "#config/env.js";
 
 const OTP_EXPIRY_SECONDS = Number(OTP_TTL);
 
@@ -81,7 +81,6 @@ export const verifyOtp = async ({ requestId, otp }) => {
 
     return {
         message: AUTH_MSG.EMAIL_VERIFICATION_OTP_VERIFIED,
-        ...buildAuthResponse(updatedUser),
         user: sanitizeUser(updatedUser),
     };
 };

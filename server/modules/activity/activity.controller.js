@@ -1,9 +1,9 @@
 import {
     getProjectActivity,
     getDashboardActivity,
-} from "./activity.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+} from "./services/activity.service.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const getProjectActivityHandler = asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;

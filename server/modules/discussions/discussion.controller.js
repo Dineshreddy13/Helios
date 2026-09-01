@@ -3,10 +3,10 @@ import {
     sendMessage,
     editMessage,
     deleteMessage,
-} from "./discussion.service.js";
-import { getIO } from "../../sockets/index.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+} from "./services/discussion.service.js";
+import { getIO } from "#sockets/index.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const getMessagesHandler = asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;

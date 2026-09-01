@@ -1,6 +1,12 @@
-import { createProject, deleteProject, getProjectById, getProjectsForUser, updateProjectReadme } from "./project.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+import {
+    createProject,
+    getProjectsForUser,
+    getProjectById,
+    deleteProject,
+    updateProjectReadme,
+} from "./services/project.core.service.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const createProjectHandler = asyncHandler(async (req, res, next) => {
   const payload = await createProject(req.user.id, req.validated.body);

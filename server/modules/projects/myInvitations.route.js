@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
-import { respondInvitationSchema } from "../../validators/invitation.validator.js";
+import { respondInvitationSchema } from "#validators/invitation.validator.js";
 import {
   getMyInvitationsHandler,
   respondToInvitationHandler,

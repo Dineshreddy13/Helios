@@ -1,10 +1,10 @@
 import { Worker } from "bullmq";
-import { redis } from "../../config/redis.js";
+import { redis } from "#config/redis.js";
 import { emailQueue } from "../queues/email.queue.js";
-import { db } from "../../database/db.js";
-import { tasks, users } from "../../models/index.js";
+import { db } from "#database/db.js";
+import { tasks, users } from "#models/index.js";
 import { eq } from "drizzle-orm";
-import logger from "../../utils/logger.js";
+import logger from "#utils/logger.js";
 
 const processReminderJob = async (job) => {
   const { taskId } = job.data;

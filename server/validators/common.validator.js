@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { VALIDATION_MSG } from "../config/constants.js";
+import { VALIDATION_MSG } from "#config/constants.js";
 
 const uuidParam = (errorMessage) => z.string().uuid(errorMessage);
 

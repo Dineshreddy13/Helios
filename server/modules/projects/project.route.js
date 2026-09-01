@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
-import { createProjectSchema, updateProjectReadmeSchema } from "../../validators/project.validator.js";
-import { createInvitationSchema } from "../../validators/invitation.validator.js";
-import { createListSchema, updateListSchema, reorderListsSchema } from "../../validators/list.validator.js";
-import { projectIdParamSchema, listIdParamSchema } from "../../validators/common.validator.js";
+import { createProjectSchema, updateProjectReadmeSchema } from "#validators/project.validator.js";
+import { createInvitationSchema } from "#validators/invitation.validator.js";
+import { createListSchema, updateListSchema, reorderListsSchema } from "#validators/list.validator.js";
+import { projectIdParamSchema, listIdParamSchema } from "#validators/common.validator.js";
 
 import {
   createProjectHandler,

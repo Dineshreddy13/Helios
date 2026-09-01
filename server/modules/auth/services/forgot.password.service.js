@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
-import { AUTH_MSG } from "../../../config/constants.js";
-import { setCache } from "../../../utils/cache.js";
-import { users } from "../../../models/index.js";
+import { AUTH_MSG } from "#config/constants.js";
+import { setCache } from "#utils/cache.js";
+import { users } from "#models/index.js";
 import { sendEmail } from "../../../shared/services/email.service.js";
-import { db } from "../../../database/db.js";
+import { db } from "#database/db.js";
 import { generateOtp, getOtpExpiryLabel } from "../utils/otp.utils.js";
-import { PASSWORD_RESET_TTL } from "../../../config/env.js";
+import { PASSWORD_RESET_TTL } from "#config/env.js";
 
 export const forgotPasswordService = async ({ email }) => {
     const [user] = await db

@@ -1,13 +1,13 @@
 import {
     createList,
-    deleteList,
     getListsForProject,
-    reorderLists,
     updateList,
-} from "./list.service.js";
-import { getIO } from "../../sockets/index.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+    deleteList,
+    reorderLists,
+} from "./services/list.management.service.js";
+import { getIO } from "#sockets/index.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const createListHandler = asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;

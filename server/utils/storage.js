@@ -1,38 +1,23 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import logger from "./logger.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import cloudinary from "../config/cloudinary.js";
 
 /**
- * Safely deletes a file from disk given its URL (e.g. /uploads/...) or absolute path.
+ * Safely deletes a file from Cloudinary (given publicId)
  */
-export const deleteFile = (fileUrlOrPath) => {
+export const deleteFile = async (publicId) => {
     try {
-        let targetPath = fileUrlOrPath;
-
-        // If it's a relative URL from our DB (e.g., /uploads/tasks/filename.jpg)
-        if (fileUrlOrPath.startsWith("/uploads")) {
-            targetPath = path.join(__dirname, "..", fileUrlOrPath);
-        }
-
-        if (fs.existsSync(targetPath)) {
-            fs.unlinkSync(targetPath);
-        }
+        if (!publicId) return;
+        await cloudinary.uploader.destroy(publicId);
     } catch (err) {
-        logger.error(`Failed to delete file: ${fileUrlOrPath}`, err);
+        logger.error(`Failed to delete file: ${publicId}`, err);
     }
 };
 
 /**
- * Safely deletes multiple files from disk.
+ * Safely deletes multiple files from Cloudinary or disk.
  */
-export const deleteFiles = (fileUrlsOrPaths) => {
+export const deleteFiles = async (fileUrlsOrPaths) => {
     if (!Array.isArray(fileUrlsOrPaths)) return;
     
-    for (const fileUrl of fileUrlsOrPaths) {
-        deleteFile(fileUrl);
-    }
+    await Promise.all(fileUrlsOrPaths.map(fileUrl => deleteFile(fileUrl)));
 };

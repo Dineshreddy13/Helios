@@ -1,15 +1,15 @@
 import {
     createTask,
-    deleteTask,
-    deleteTaskFile,
     getTasksForProject,
-    moveTask,
     updateTask,
+    deleteTask,
+    moveTask,
     uploadTaskFiles,
-} from "./task.service.js";
-import { getIO } from "../../sockets/index.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/ApiResponse.js";
+    deleteTaskFile,
+} from "./services/index.js";
+import { getIO } from "#sockets/index.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 
 export const createTaskHandler = asyncHandler(async (req, res, next) => {
     const { listId } = req.params;

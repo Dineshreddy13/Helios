@@ -1,16 +1,14 @@
 import { and, desc, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { PROJECT_MSG } from "../../config/constants.js";
-import { db } from "../../database/db.js";
 import {
     activityLogs,
     projectMembers,
     projects,
     users,
-} from "../../models/index.js";
-import { getIO } from "../../sockets/index.js";
-import { ApiError } from "../../utils/ApiError.js";
-import { requireProjectMember } from "../../utils/permissions.js";
+} from "#models/index.js";
+import { getIO } from "#sockets/index.js";
+import { db } from "#database/db.js";
+import { requireProjectMember } from "../../projects/utils/permissions.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 

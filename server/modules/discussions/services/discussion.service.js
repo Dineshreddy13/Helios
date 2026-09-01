@@ -1,9 +1,9 @@
 import { eq, and, lt, desc } from "drizzle-orm";
-import { db } from "../../database/db.js";
-import { discussionMessages, projectMembers, users } from "../../models/index.js";
-import { PROJECT_MSG, DISCUSSION_MSG } from "../../config/constants.js";
-import { ApiError } from "../../utils/ApiError.js";
-import { requireProjectMember, getMembership } from "../../utils/permissions.js";
+import { db } from "#database/db.js";
+import { discussionMessages, projectMembers, users } from "#models/index.js";
+import { PROJECT_MSG, DISCUSSION_MSG } from "#config/constants.js";
+import { ApiError } from "#utils/ApiError.js";
+import { requireProjectMember, getMembership } from "../../projects/utils/permissions.js";
 
 /**
  * Build the select columns for a message with sender info.

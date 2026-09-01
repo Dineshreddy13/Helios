@@ -6,6 +6,7 @@ import {
   inviteUserApi,
   respondToInvitationApi,
 } from '../api/invitation.api';
+import socket from '../lib/socket';
 
 const useInvitationStore = create((set) => ({
   myInvitations: [],
@@ -86,6 +87,22 @@ const useInvitationStore = create((set) => ({
       });
       throw error;
     }
+  },
+
+  // ── Socket listeners ────────────────────────────────────────────────────
+
+  setupSocketListeners: () => {
+    socket.on('invitation:received', ({ invitation }) => {
+      set((state) => {
+        // Prevent duplicates
+        if (state.myInvitations.some((inv) => inv.id === invitation.id)) return state;
+        return { myInvitations: [invitation, ...state.myInvitations] };
+      });
+    });
+  },
+
+  teardownSocketListeners: () => {
+    socket.off('invitation:received');
   },
 
   clearError: () => set({ error: null }),

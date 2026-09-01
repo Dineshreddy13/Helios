@@ -7,8 +7,8 @@ const envSchema = z.object({
     PORT: z.string().default("3000"),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
     CLIENT_URL: z.url("CLIENT_URL must be a valid URL").transform((url) => url.replace(/\/$/, "")).default("http://localhost:5173"),
-    JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
-    JWT_EXPIRES_IN: z.string().default("1d"),
+    SESSION_SECRET: z.string().min(1, "SESSION_SECRET is required"),
+    SESSION_MAX_AGE_MS: z.coerce.number().default(604800000),
     REDIS_URL: z.string().min(1, "REDIS_URL is required"),
     BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required"),
     BREVO_SENDER_EMAIL: z.string().min(1, "BREVO_SENDER_EMAIL is required"),
@@ -17,6 +17,9 @@ const envSchema = z.object({
     PASSWORD_RESET_TTL: z.string().default("900"),
     NODE_ENV: z.enum(["development", "production"]),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+    CLOUDINARY_CLOUD_NAME: z.string().min(1, "CLOUDINARY_CLOUD_NAME is required"),
+    CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
+    CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -31,13 +34,16 @@ export const {
     PORT,
     DATABASE_URL,
     CLIENT_URL,
-    JWT_SECRET,
-    JWT_EXPIRES_IN,
+    SESSION_SECRET,
+    SESSION_MAX_AGE_MS,
     REDIS_URL,
     BREVO_API_KEY,
     BREVO_SENDER_EMAIL,
     BREVO_SENDER_NAME,
     OTP_TTL,
     PASSWORD_RESET_TTL,
-    LOG_LEVEL
+    LOG_LEVEL,
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
 } = parsedEnv.data;

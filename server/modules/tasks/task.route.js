@@ -2,8 +2,8 @@ import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
 import { upload } from "../../middlewares/upload.middleware.js";
-import { createTaskSchema, updateTaskSchema, moveTaskSchema } from "../../validators/task.validator.js";
-import { projectIdParamSchema, listIdParamSchema, taskIdParamSchema, fileIdParamSchema } from "../../validators/common.validator.js";
+import { createTaskSchema, updateTaskSchema, moveTaskSchema } from "#validators/task.validator.js";
+import { projectIdParamSchema, listIdParamSchema, taskIdParamSchema, fileIdParamSchema } from "#validators/common.validator.js";
 import {
     createTaskHandler,
     getTasksHandler,

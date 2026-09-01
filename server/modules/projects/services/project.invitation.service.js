@@ -1,15 +1,16 @@
 import { and, eq } from "drizzle-orm";
-import { INVITATION_MSG, PROJECT_MSG } from "../../config/constants.js";
-import { db } from "../../database/db.js";
+import { INVITATION_MSG, PROJECT_MSG } from "#config/constants.js";
+import { db } from "#database/db.js";
 import {
     projectInvitations,
     projectMembers,
     projects,
     users,
-} from "../../models/index.js";
-import { logActivity } from "../activity/activity.service.js";
-import { ApiError } from "../../utils/ApiError.js";
-import { getMembership, requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../../utils/permissions.js";
+} from "#models/index.js";
+import { logActivity } from "../../activity/services/activity.service.js";
+import { ApiError } from "#utils/ApiError.js";
+import { getMembership, requireProjectMember, requireProjectOwner, invalidateMembershipCache } from "../utils/permissions.js";
+import { getIO } from "#sockets/index.js";
 
 // invited user alias (drizzle needs aliased table for multiple joins on same table)
 import { alias } from "drizzle-orm/pg-core";
@@ -27,28 +28,42 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
         throw new ApiError(409, INVITATION_MSG.ALREADY_MEMBER);
     }
 
-    // 3. verify no pending invitation already exists
+    // 3. check for existing invitation
     const [existingInvitation] = await db
-        .select({ id: projectInvitations.id })
+        .select({ id: projectInvitations.id, status: projectInvitations.status })
         .from(projectInvitations)
         .where(
             and(
                 eq(projectInvitations.projectId, projectId),
-                eq(projectInvitations.invitedUserId, invitedUserId),
-                eq(projectInvitations.status, "pending")
+                eq(projectInvitations.invitedUserId, invitedUserId)
             )
         )
         .limit(1);
 
-    if (existingInvitation) {
-        throw new ApiError(409, INVITATION_MSG.ALREADY_INVITED);
-    }
+    let invitationId;
 
-    // 4. insert invitation
-    const [invitation] = await db
-        .insert(projectInvitations)
-        .values({ projectId, invitedUserId, invitedById: inviterId })
-        .returning();
+    if (existingInvitation) {
+        if (existingInvitation.status === "pending") {
+            throw new ApiError(409, INVITATION_MSG.ALREADY_INVITED);
+        }
+
+        // If it was rejected (or they were removed after accepting), update it to pending
+        const [updatedInvitation] = await db
+            .update(projectInvitations)
+            .set({ status: "pending", invitedById: inviterId, updatedAt: new Date() })
+            .where(eq(projectInvitations.id, existingInvitation.id))
+            .returning();
+            
+        invitationId = updatedInvitation.id;
+    } else {
+        // 4. insert new invitation
+        const [newInvitation] = await db
+            .insert(projectInvitations)
+            .values({ projectId, invitedUserId, invitedById: inviterId })
+            .returning();
+            
+        invitationId = newInvitation.id;
+    }
 
     // 5. return with invited user info
     const [row] = await db
@@ -62,10 +77,21 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
                 username: invitedUser.username,
                 email: invitedUser.email,
             },
+            project: {
+                id: projects.id,
+                name: projects.name,
+                description: projects.description,
+            },
+            invitedBy: {
+                id: inviter.id,
+                username: inviter.username,
+            },
         })
         .from(projectInvitations)
         .innerJoin(invitedUser, eq(projectInvitations.invitedUserId, invitedUser.id))
-        .where(eq(projectInvitations.id, invitation.id))
+        .innerJoin(projects, eq(projectInvitations.projectId, projects.id))
+        .innerJoin(inviter, eq(projectInvitations.invitedById, inviter.id))
+        .where(eq(projectInvitations.id, invitationId))
         .limit(1);
 
     await logActivity({
@@ -73,9 +99,16 @@ export const inviteUserToProject = async (projectId, invitedUserId, inviterId) =
         actorId: inviterId,
         actionType: "invitation.sent",
         targetType: "invitation",
-        targetId: invitation.id,
+        targetId: invitationId,
         metadata: { invitedUserName: row.invitedUser.username },
     });
+
+    try {
+        getIO().to(`user:${invitedUserId}`).emit("invitation:received", { invitation: row });
+    } catch (err) {
+        // Fallback in case socket is not initialized
+        console.error("Socket error emitting invitation:", err);
+    }
 
     return { invitation: row, message: INVITATION_MSG.SENT };
 };

@@ -1,22 +1,18 @@
 import { getCurrentUser, logout, login } from "./services/auth.service.js"
-import { ApiResponse } from "../../utils/ApiResponse.js";
+import { ApiResponse } from "#utils/ApiResponse.js";
 import { register } from "./services/registration.service.js";
 import { verifyOtp, resendOtp } from "./services/verification.service.js";
 import { forgotPasswordService } from "./services/forgot.password.service.js";
 import { resetPasswordService } from "./services/reset.password.service.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import { asyncHandler } from "#utils/asyncHandler.js";
+import { COOKIE_NAME } from "#config/constants.js";
 
-const sendAuthResponse = (res, payload, statusCode = 200) => {
-  const cookiePayload = { httpOnly: true, path: "/" };
-
-  if (payload.cookieOptions) {
-    res.cookie(payload.cookieName, payload.token || "", {
-      ...payload.cookieOptions,
-      ...cookiePayload,
-    });
+const sendAuthResponse = (req, res, payload, statusCode = 200) => {
+  // Save user ID in session
+  if (payload.user && payload.user.id) {
+    req.session.userId = payload.user.id;
   }
 
-  // we use a clean data object to wrap user
   return res.status(statusCode).json(
     new ApiResponse(statusCode, { user: payload.user }, payload.message)
   );
@@ -35,7 +31,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
 
 export const loginUser = asyncHandler(async (req, res, next) => {
   const payload = await login(req.validated.body);
-  return sendAuthResponse(res, payload, 200);
+  return sendAuthResponse(req, res, payload, 200);
 });
 
 export const getMe = asyncHandler(async (req, res, next) => {
@@ -46,14 +42,14 @@ export const getMe = asyncHandler(async (req, res, next) => {
 });
 
 export const logoutUser = asyncHandler(async (req, res, next) => {
-  const payload = await logout();
-  res.clearCookie(payload.cookieName, payload.cookieOptions);
+  const payload = await logout(req);
+  res.clearCookie(COOKIE_NAME);
   return res.status(200).json(new ApiResponse(200, null, payload.message));
 });
 
 export const verifyOtpCode = asyncHandler(async (req, res, next) => {
   const payload = await verifyOtp(req.validated.body);
-  return sendAuthResponse(res, payload, 200);
+  return sendAuthResponse(req, res, payload, 200);
 });
 
 export const resendOtpCode = asyncHandler(async (req, res, next) => {
