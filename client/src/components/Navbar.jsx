@@ -51,7 +51,7 @@ import { Input } from "@/components/ui/input"
 
 const Navbar = () => {
   const { user, logout } = useAuthStore();
-  const { myInvitations, fetchMyInvitations, respondToInvitation } = useInvitationStore();
+  const { myInvitations, fetchMyInvitations, respondToInvitation, setupSocketListeners, teardownSocketListeners } = useInvitationStore();
   const { projects, currentProject, fetchProjects } = useProjectStore();
   const { lists } = useListStore();
   const { tasksByListId } = useTaskStore();
@@ -86,8 +86,12 @@ const Navbar = () => {
     if (user) {
       fetchMyInvitations();
       fetchProjects();
+      setupSocketListeners();
+      return () => {
+        teardownSocketListeners();
+      };
     }
-  }, [user, fetchMyInvitations, fetchProjects]);
+  }, [user, fetchMyInvitations, fetchProjects, setupSocketListeners, teardownSocketListeners]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

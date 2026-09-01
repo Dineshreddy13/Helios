@@ -1,9 +1,9 @@
 import {
     getMyInvitations,
     respondToInvitation,
-    inviteUserToProject as inviteUser,
     getProjectInvitations,
     getProjectMembers,
+    inviteUserToProject,
 } from "./services/project.invitation.service.js";
 import { asyncHandler } from "#utils/asyncHandler.js";
 import { ApiResponse } from "#utils/ApiResponse.js";
