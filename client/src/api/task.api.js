@@ -38,3 +38,18 @@ export const deleteTaskFileApi = async (taskId, fileId) => {
   const { data: res } = await api.delete(`/api/v1/projects/tasks/${taskId}/files/${fileId}`);
   return res;
 };
+
+export const addDependencyApi = async (taskId, data) => {
+  const { data: res } = await api.post(`/api/v1/projects/tasks/${taskId}/dependencies`, data);
+  return res;
+};
+
+export const removeDependencyApi = async (taskId, blockingTaskId) => {
+  const { data: res } = await api.delete(`/api/v1/projects/tasks/${taskId}/dependencies/${blockingTaskId}`);
+  return res;
+};
+
+export const getDependenciesApi = async (taskId) => {
+  const { data: res } = await api.get(`/api/v1/projects/tasks/${taskId}/dependencies`);
+  return res;
+};

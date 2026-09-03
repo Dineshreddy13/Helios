@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight01Icon, File02Icon, Cancel01Icon, CheckmarkCircle02Icon, CircleIcon, Upload01Icon, Calendar01Icon, Tag01Icon, UserIcon, File01Icon, Notification01Icon, ArrowDown01Icon } from 'hugeicons-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { addDependencyApi, removeDependencyApi, getDependenciesApi } from '../api/task.api';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { PRIORITY_MAP } from '../components/board/TaskCard';
 import {
@@ -99,6 +101,22 @@ const TaskPage = () => {
   const [openReminder, setOpenReminder] = useState(false);
   const [isSavingReminder, setIsSavingReminder] = useState(false);
 
+  // Dependencies state
+  const [dependencies, setDependencies] = useState([]);
+  const [isLoadingDependencies, setIsLoadingDependencies] = useState(false);
+  const [openAddDependency, setOpenAddDependency] = useState(false);
+  const [dependencySearch, setDependencySearch] = useState('');
+
+  useEffect(() => {
+    if (taskId) {
+      setIsLoadingDependencies(true);
+      getDependenciesApi(taskId)
+        .then(res => setDependencies(res.dependencies))
+        .catch(err => console.error(err))
+        .finally(() => setIsLoadingDependencies(false));
+    }
+  }, [taskId]);
+
   useEffect(() => {
     fetchProjectById(projectId);
 
@@ -158,8 +176,21 @@ const TaskPage = () => {
     }
   };
 
+  const hasIncompleteBlockers = useMemo(() => {
+    const allTasks = Object.values(tasksByListId).flat();
+    return dependencies.some(d => {
+      const storeTask = allTasks.find(t => t.id === d.blockingTaskId);
+      const status = storeTask ? storeTask.status : d.blockingTask.status;
+      return status !== 'completed';
+    });
+  }, [dependencies, tasksByListId]);
+
   const handleStatusClick = () => {
     if (task?.status !== 'completed') {
+      if (hasIncompleteBlockers) {
+        alert("Cannot complete this task. Some blocking dependencies are incomplete.");
+        return;
+      }
       setShowConfirmComplete(true);
     } else {
       confirmToggleStatus();
@@ -379,6 +410,8 @@ const TaskPage = () => {
               variant={task.status === 'completed' ? 'outline' : 'default'}
               className="shrink-0"
               onClick={handleStatusClick}
+              disabled={hasIncompleteBlockers && task.status !== 'completed'}
+              title={hasIncompleteBlockers && task.status !== 'completed' ? "Incomplete dependencies" : ""}
             >
               {task.status === 'completed' ? (
                 <>
@@ -472,7 +505,7 @@ const TaskPage = () => {
               {task.files?.filter(f => f.mimeType.startsWith('image/')).length > 0 && (
                 <AttachmentGroup>
                   {task.files.filter(f => f.mimeType.startsWith('image/')).map((file) => {
-                    const fileUrl = `${apiUrl}${file.url}`;
+                    const fileUrl = file.url.startsWith('http') ? file.url : `${apiUrl}${file.url}`;
 
                     return (
                       <Attachment key={file.id} orientation="vertical">
@@ -531,6 +564,93 @@ const TaskPage = () => {
                 <div className="text-center py-12 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
                   <File01Icon className="w-8 h-8 mx-auto mb-3 opacity-20" />
                   <p className="text-sm">No attachments yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Dependencies Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Dependencies (Blocked By)</h2>
+              <Popover open={openAddDependency} onOpenChange={setOpenAddDependency}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    Add Blocker
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="end">
+                  <Command>
+                    <CommandInput placeholder="Search tasks..." value={dependencySearch} onValueChange={setDependencySearch} />
+                    <CommandList>
+                      <CommandEmpty>No tasks found.</CommandEmpty>
+                      <CommandGroup>
+                        {Object.values(tasksByListId)
+                          .flat()
+                          .filter(t => t.id !== task.id && !dependencies.some(d => d.blockingTaskId === t.id))
+                          .map(t => (
+                            <CommandItem
+                              key={t.id}
+                              value={t.title}
+                              onSelect={async () => {
+                                setOpenAddDependency(false);
+                                try {
+                                  const res = await addDependencyApi(task.id, { blockingTaskId: t.id });
+                                  // Wait, the API returns the dependency which has no 'blockingTask' field fully populated like getDependenciesApi does.
+                                  // Let's refetch dependencies to get the populated data.
+                                  const updatedDeps = await getDependenciesApi(task.id);
+                                  setDependencies(updatedDeps.dependencies);
+                                } catch (err) {
+                                  alert(err.response?.data?.message || "Failed to add dependency");
+                                }
+                              }}
+                            >
+                              <CheckmarkCircle02Icon className={cn("mr-2 h-4 w-4 shrink-0", t.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
+                              <span className="truncate">{t.title}</span>
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex flex-col gap-3 py-4">
+              {isLoadingDependencies ? (
+                <div className="flex justify-center py-8 border border-dashed rounded-xl text-muted-foreground bg-muted/20"><Spinner className="w-5 h-5" /></div>
+              ) : dependencies.length > 0 ? (
+                dependencies.map(dep => {
+                  const allTasks = Object.values(tasksByListId).flat();
+                  const storeTask = allTasks.find(t => t.id === dep.blockingTaskId);
+                  const blockingTask = storeTask || dep.blockingTask;
+                  return (
+                  <div key={dep.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <CheckmarkCircle02Icon className={cn("w-5 h-5 shrink-0", blockingTask.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
+                      <span className="font-medium truncate">{blockingTask.title}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-muted-foreground hover:text-destructive shrink-0"
+                      onClick={async () => {
+                        try {
+                          await removeDependencyApi(task.id, dep.blockingTaskId);
+                          setDependencies(prev => prev.filter(d => d.id !== dep.id));
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                    >
+                      <Cancel01Icon className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
+                  <p className="text-sm">No blocking dependencies.</p>
                 </div>
               )}
             </div>
