@@ -6,6 +6,9 @@ import {
     moveTask,
     uploadTaskFiles,
     deleteTaskFile,
+    addDependency,
+    removeDependency,
+    getDependencies,
 } from "./services/index.js";
 import { getIO } from "#sockets/index.js";
 import { asyncHandler } from "#utils/asyncHandler.js";
@@ -101,5 +104,38 @@ export const deleteTaskFileHandler = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json(
         new ApiResponse(200, { task: payload.task }, payload.message)
+    );
+});
+
+// ── Task Dependencies ─────────────────────────────────────────────────────
+
+export const addDependencyHandler = asyncHandler(async (req, res, next) => {
+    const { taskId } = req.params;
+    const payload = await addDependency(taskId, req.user.id, req.validated.body);
+
+    getIO().to(`project:${payload.dependency.blockedTaskId}`).emit("task:dependency:added", payload.dependency);
+
+    return res.status(201).json(
+        new ApiResponse(201, { dependency: payload.dependency }, payload.message)
+    );
+});
+
+export const removeDependencyHandler = asyncHandler(async (req, res, next) => {
+    const { taskId, blockingTaskId } = req.params;
+    const payload = await removeDependency(taskId, req.user.id, blockingTaskId);
+
+    getIO().emit("task:dependency:removed", { taskId, blockingTaskId });
+
+    return res.status(200).json(
+        new ApiResponse(200, null, payload.message)
+    );
+});
+
+export const getDependenciesHandler = asyncHandler(async (req, res, next) => {
+    const { taskId } = req.params;
+    const payload = await getDependencies(taskId, req.user.id);
+
+    return res.status(200).json(
+        new ApiResponse(200, { dependencies: payload.dependencies }, "Dependencies retrieved successfully")
     );
 });

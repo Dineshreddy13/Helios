@@ -103,8 +103,16 @@ export const PROJECT_MSG = {
 
 export const TASK_MSG = {
     ASSIGNEE_NOT_MEMBER: "Assignee must be a member of this project.",
+    BLOCKED_INCOMPLETE: "Cannot complete this task — it has unfinished blocking dependencies.",
     CREATED: "Task created successfully.",
     DELETED: "Task deleted successfully.",
+    DEPENDENCY_ADDED: "Dependency added successfully.",
+    DEPENDENCY_CROSS_PROJECT: "Dependencies must be between tasks in the same project.",
+    DEPENDENCY_CYCLE: "Adding this dependency would create a cycle.",
+    DEPENDENCY_DUPLICATE: "This dependency already exists.",
+    DEPENDENCY_NOT_FOUND: "Dependency not found.",
+    DEPENDENCY_REMOVED: "Dependency removed successfully.",
+    DEPENDENCY_SELF: "A task cannot depend on itself.",
     FILE_DELETED: "File deleted successfully.",
     FILE_LIMIT_EXCEEDED: "A task can have at most 5 files.",
     FILE_NOT_FOUND: "File not found on this task.",

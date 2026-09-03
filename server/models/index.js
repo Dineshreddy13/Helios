@@ -4,6 +4,7 @@ export * from "./projects/projectMember.model.js";
 export * from "./projects/projectInvitation.model.js";
 export * from "./lists/list.model.js";
 export * from "./tasks/task.model.js";
+export * from "./tasks/taskDependency.model.js";
 export * from "./activity/activityLog.model.js";
 export * from "./discussions/discussionMessage.model.js";
 export * from "./relations.js";

@@ -96,3 +96,7 @@ export const moveTaskSchema = z.object({
   targetPosition: z.number().min(0, VALIDATION_MSG.INVALID_TARGET_POSITION),
 });
 
+export const addDependencySchema = z.object({
+  blockingTaskId: z.string().uuid("Please provide a valid blocking task UUID."),
+});
+
