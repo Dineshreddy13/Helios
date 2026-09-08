@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { TASK_MSG } from "#config/constants.js";
 import { db } from "#database/db.js";
-import { tasks } from "#models/index.js";
+import { tasks, taskDependencies } from "#models/index.js";
 import { logActivity } from "../../activity/services/activity.service.js";
 import { ApiError } from "#utils/ApiError.js";
 import { delCache } from "#utils/cache.js";
@@ -29,6 +29,20 @@ export const updateTask = async (taskId, userId, { title, description, assigneeI
         const assigneeMembership = await getMembership(existing.projectId, assigneeId);
         if (!assigneeMembership) {
             throw new ApiError(422, TASK_MSG.ASSIGNEE_NOT_MEMBER);
+        }
+    }
+
+    // 3b. If completing the task, check for unfinished blocking dependencies
+    if (status === "completed") {
+        const blockers = await db
+            .select({ status: tasks.status })
+            .from(taskDependencies)
+            .innerJoin(tasks, eq(taskDependencies.blockingTaskId, tasks.id))
+            .where(eq(taskDependencies.blockedTaskId, taskId));
+
+        const hasIncomplete = blockers.some((b) => b.status !== "completed");
+        if (hasIncomplete) {
+            throw new ApiError(422, TASK_MSG.BLOCKED_INCOMPLETE);
         }
     }
 

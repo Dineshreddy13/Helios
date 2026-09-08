@@ -2,8 +2,8 @@ import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
 import { upload } from "../../middlewares/upload.middleware.js";
-import { createTaskSchema, updateTaskSchema, moveTaskSchema } from "#validators/task.validator.js";
-import { projectIdParamSchema, listIdParamSchema, taskIdParamSchema, fileIdParamSchema } from "#validators/common.validator.js";
+import { createTaskSchema, updateTaskSchema, moveTaskSchema, addDependencySchema } from "#validators/task.validator.js";
+import { projectIdParamSchema, listIdParamSchema, taskIdParamSchema, fileIdParamSchema, blockingTaskIdParamSchema } from "#validators/common.validator.js";
 import {
     createTaskHandler,
     getTasksHandler,
@@ -12,6 +12,9 @@ import {
     moveTaskHandler,
     uploadTaskFilesHandler,
     deleteTaskFileHandler,
+    addDependencyHandler,
+    removeDependencyHandler,
+    getDependenciesHandler,
 } from "./task.controller.js";
 
 const router = Router();
@@ -28,5 +31,10 @@ router.delete("/tasks/:taskId", validateRequest(taskIdParamSchema, "params"), de
 // Task file management
 router.post("/tasks/:taskId/files", validateRequest(taskIdParamSchema, "params"), upload.array("files", 5), uploadTaskFilesHandler);
 router.delete("/tasks/:taskId/files/:fileId", validateRequest(taskIdParamSchema, "params"), validateRequest(fileIdParamSchema, "params"), deleteTaskFileHandler);
+
+// Task dependencies
+router.post("/tasks/:taskId/dependencies", validateRequest(taskIdParamSchema, "params"), validateRequest(addDependencySchema), addDependencyHandler);
+router.get("/tasks/:taskId/dependencies", validateRequest(taskIdParamSchema, "params"), getDependenciesHandler);
+router.delete("/tasks/:taskId/dependencies/:blockingTaskId", validateRequest(blockingTaskIdParamSchema, "params"), removeDependencyHandler);
 
 export default router;

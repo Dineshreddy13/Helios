@@ -26,3 +26,8 @@ export const messageIdParamSchema = z.object({
 export const fileIdParamSchema = z.object({
   fileId: uuidParam("Please provide a valid file UUID."),
 });
+
+export const blockingTaskIdParamSchema = z.object({
+  taskId: uuidParam("Please provide a valid task UUID."),
+  blockingTaskId: uuidParam("Please provide a valid blocking task UUID."),
+});

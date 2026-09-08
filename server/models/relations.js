@@ -4,6 +4,7 @@ import { projectMembers } from "./projects/projectMember.model.js";
 import { projectInvitations } from "./projects/projectInvitation.model.js";
 import { lists } from "./lists/list.model.js";
 import { tasks } from "./tasks/task.model.js";
+import { taskDependencies } from "./tasks/taskDependency.model.js";
 import { activityLogs } from "./activity/activityLog.model.js";
 import { discussionMessages } from "./discussions/discussionMessage.model.js";
 import { users } from "./auth/user.model.js";
@@ -78,7 +79,7 @@ export const listsRelations = relations(lists, ({ one, many }) => ({
 }));
 
 // ── tasks ──────────────────────────────────────────────────────────────────
-export const tasksRelations = relations(tasks, ({ one }) => ({
+export const tasksRelations = relations(tasks, ({ one, many }) => ({
   list: one(lists, {
     fields: [tasks.listId],
     references: [lists.id],
@@ -98,6 +99,24 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
     fields: [tasks.createdById],
     references: [users.id],
     relationName: "task_creator",
+  }),
+  // Dependencies: tasks that block THIS task
+  blocking: many(taskDependencies, { relationName: "blocked_task_deps" }),
+  // Dependencies: tasks that THIS task blocks
+  blockedBy: many(taskDependencies, { relationName: "blocking_task_deps" }),
+}));
+
+// ── task_dependencies ─────────────────────────────────────────────────────
+export const taskDependenciesRelations = relations(taskDependencies, ({ one }) => ({
+  blockingTask: one(tasks, {
+    fields: [taskDependencies.blockingTaskId],
+    references: [tasks.id],
+    relationName: "blocking_task_deps",
+  }),
+  blockedTask: one(tasks, {
+    fields: [taskDependencies.blockedTaskId],
+    references: [tasks.id],
+    relationName: "blocked_task_deps",
   }),
 }));
 
