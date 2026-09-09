@@ -31,3 +31,9 @@ export const blockingTaskIdParamSchema = z.object({
   taskId: uuidParam("Please provide a valid task UUID."),
   blockingTaskId: uuidParam("Please provide a valid blocking task UUID."),
 });
+
+export const todoIdParamSchema = z.object({
+  taskId: uuidParam("Please provide a valid task UUID."),
+  todoId: uuidParam("Please provide a valid todo UUID."),
+});
+

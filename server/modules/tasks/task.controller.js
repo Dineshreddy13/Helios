@@ -9,6 +9,11 @@ import {
     addDependency,
     removeDependency,
     getDependencies,
+    createTodo,
+    getTodos,
+    updateTodo,
+    deleteTodo,
+    reorderTodos,
 } from "./services/index.js";
 import { getIO } from "#sockets/index.js";
 import { asyncHandler } from "#utils/asyncHandler.js";
@@ -137,5 +142,60 @@ export const getDependenciesHandler = asyncHandler(async (req, res, next) => {
 
     return res.status(200).json(
         new ApiResponse(200, { dependencies: payload.dependencies }, "Dependencies retrieved successfully")
+    );
+});
+
+// ── Task Todos ────────────────────────────────────────────────────────────────
+
+export const createTodoHandler = asyncHandler(async (req, res) => {
+    const { taskId } = req.params;
+    const payload = await createTodo(taskId, req.user.id, req.validated.body);
+
+    getIO().to(`project:${payload.projectId}`).emit("task:todos:updated", { taskId, todos: [payload.todo] });
+
+    return res.status(201).json(
+        new ApiResponse(201, { todo: payload.todo }, payload.message)
+    );
+});
+
+export const getTodosHandler = asyncHandler(async (req, res) => {
+    const { taskId } = req.params;
+    const payload = await getTodos(taskId, req.user.id);
+
+    return res.status(200).json(
+        new ApiResponse(200, { todos: payload.todos }, payload.message)
+    );
+});
+
+export const updateTodoHandler = asyncHandler(async (req, res) => {
+    const { taskId, todoId } = req.params;
+    const payload = await updateTodo(taskId, todoId, req.user.id, req.validated.body);
+
+    getIO().to(`project:${payload.projectId}`).emit("task:todos:updated", { taskId, todos: [payload.todo] });
+
+    return res.status(200).json(
+        new ApiResponse(200, { todo: payload.todo }, payload.message)
+    );
+});
+
+export const deleteTodoHandler = asyncHandler(async (req, res) => {
+    const { taskId, todoId } = req.params;
+    const payload = await deleteTodo(taskId, todoId, req.user.id);
+
+    getIO().to(`project:${payload.projectId}`).emit("task:todo:deleted", { taskId, todoId });
+
+    return res.status(200).json(
+        new ApiResponse(200, null, payload.message)
+    );
+});
+
+export const reorderTodosHandler = asyncHandler(async (req, res) => {
+    const { taskId } = req.params;
+    const payload = await reorderTodos(taskId, req.user.id, req.validated.body);
+
+    getIO().to(`project:${payload.projectId}`).emit("task:todos:updated", { taskId, todos: payload.todos });
+
+    return res.status(200).json(
+        new ApiResponse(200, { todos: payload.todos }, payload.message)
     );
 });

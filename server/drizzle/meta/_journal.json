@@ -71,6 +71,13 @@
       "when": 1788409761485,
       "tag": "0009_ambitious_sharon_ventura",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788976581363,
+      "tag": "0010_bored_meggan",
+      "breakpoints": true
     }
   ]
 }

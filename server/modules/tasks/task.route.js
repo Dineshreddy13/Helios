@@ -2,8 +2,8 @@ import { Router } from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validateRequest } from "../../middlewares/validate.middleware.js";
 import { upload } from "../../middlewares/upload.middleware.js";
-import { createTaskSchema, updateTaskSchema, moveTaskSchema, addDependencySchema } from "#validators/task.validator.js";
-import { projectIdParamSchema, listIdParamSchema, taskIdParamSchema, fileIdParamSchema, blockingTaskIdParamSchema } from "#validators/common.validator.js";
+import { createTaskSchema, updateTaskSchema, moveTaskSchema, addDependencySchema, createTodoSchema, updateTodoSchema, reorderTodosSchema } from "#validators/task.validator.js";
+import { projectIdParamSchema, listIdParamSchema, taskIdParamSchema, fileIdParamSchema, blockingTaskIdParamSchema, todoIdParamSchema } from "#validators/common.validator.js";
 import {
     createTaskHandler,
     getTasksHandler,
@@ -15,6 +15,11 @@ import {
     addDependencyHandler,
     removeDependencyHandler,
     getDependenciesHandler,
+    createTodoHandler,
+    getTodosHandler,
+    updateTodoHandler,
+    deleteTodoHandler,
+    reorderTodosHandler,
 } from "./task.controller.js";
 
 const router = Router();
@@ -36,5 +41,12 @@ router.delete("/tasks/:taskId/files/:fileId", validateRequest(taskIdParamSchema,
 router.post("/tasks/:taskId/dependencies", validateRequest(taskIdParamSchema, "params"), validateRequest(addDependencySchema), addDependencyHandler);
 router.get("/tasks/:taskId/dependencies", validateRequest(taskIdParamSchema, "params"), getDependenciesHandler);
 router.delete("/tasks/:taskId/dependencies/:blockingTaskId", validateRequest(blockingTaskIdParamSchema, "params"), removeDependencyHandler);
+
+// Task todos (subtasks)
+router.post("/tasks/:taskId/todos", validateRequest(taskIdParamSchema, "params"), validateRequest(createTodoSchema), createTodoHandler);
+router.get("/tasks/:taskId/todos", validateRequest(taskIdParamSchema, "params"), getTodosHandler);
+router.patch("/tasks/:taskId/todos/reorder", validateRequest(taskIdParamSchema, "params"), validateRequest(reorderTodosSchema), reorderTodosHandler);
+router.patch("/tasks/:taskId/todos/:todoId", validateRequest(todoIdParamSchema, "params"), validateRequest(updateTodoSchema), updateTodoHandler);
+router.delete("/tasks/:taskId/todos/:todoId", validateRequest(todoIdParamSchema, "params"), deleteTodoHandler);
 
 export default router;

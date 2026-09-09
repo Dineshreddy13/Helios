@@ -5,3 +5,4 @@ export * from "./fetch.task.service.js";
 export * from "./move.task.service.js";
 export * from "./files.task.service.js";
 export * from "./dependency.task.service.js";
+export * from "./todo.task.service.js";
