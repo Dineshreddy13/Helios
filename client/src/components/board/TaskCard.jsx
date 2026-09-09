@@ -17,10 +17,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Delete02Icon, CheckmarkCircle02Icon, Tag01Icon, Cancel01Icon, Calendar01Icon, CheckmarkBadge01Icon, ArrowUpDownIcon, Alert01Icon, ArrowUp01Icon, ArrowRight01Icon, ArrowDown01Icon } from 'hugeicons-react';
+import { Delete02Icon, CheckmarkCircle02Icon, Tag01Icon, Cancel01Icon, Calendar01Icon, CheckmarkBadge01Icon, ArrowUpDownIcon, Alert01Icon, ArrowUp01Icon, ArrowRight01Icon, ArrowDown01Icon, Edit01Icon, MoreVerticalIcon } from 'hugeicons-react';
 
 export const PRIORITY_MAP = {
   urgent: { label: 'Urgent', color: 'text-destructive', variant: 'destructive', icon: Alert01Icon },
@@ -316,22 +317,17 @@ const TaskCard = memo(({ task }) => {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Is the currently logged-in user the assignee of this task?
-  const isAssignee = !!task.assignee && task.assignee.id === currentUser?.id;
   // Is the currently logged-in user the project owner?
   const isOwner = currentProject?.role === 'owner';
+  // Is the currently logged-in user assigned to this task?
+  const isAssignee = !!task.assignee && task.assignee.id === currentUser?.id;
 
+  // Owners can open any task page; members can only open tasks assigned to them
   const handleCardClick = () => {
-    if (isAssignee) {
-      // The assigned person (including owner who self-assigned) → task page
+    if (isOwner || isAssignee) {
       navigate(`/projects/${task.projectId}/tasks/${task.id}`);
-    } else if (isOwner) {
-      // Owner who did NOT assign themselves → edit modal
-      setIsEditing(true);
     }
-    // Regular members who are not the assignee → do nothing
   };
-
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -350,25 +346,52 @@ const TaskCard = memo(({ task }) => {
   return (
     <>
       <div
-        className="bg-background p-3 rounded-xl border border-border hover:border-primary/40 hover:shadow-sm cursor-pointer group flex flex-col gap-2 transition-all"
+        className={cn("bg-background p-3 rounded-xl border border-border hover:border-primary/40 hover:shadow-sm group flex flex-col gap-2 transition-all", (isOwner || isAssignee) ? "cursor-pointer" : "cursor-default")}
         onClick={handleCardClick}
       >
         <div className="flex justify-between items-start gap-2">
           <div className="flex items-start gap-2 flex-1 min-w-0">
-            <CheckmarkCircle02Icon 
-              className={cn("w-4 h-4 shrink-0 mt-0.5", task.status === 'completed' ? "text-green-500" : "text-muted-foreground")} 
+            <CheckmarkCircle02Icon
+              className={cn("w-4 h-4 shrink-0 mt-0.5", task.status === 'completed' ? "text-green-500" : "text-muted-foreground")}
             />
             <h4 className="text-sm font-medium break-words line-clamp-2 flex-1">{task.title}</h4>
           </div>
-          <button
-            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1 shrink-0 transition-all rounded-lg hover:bg-destructive/10"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowConfirmDelete(true);
-            }}
-          >
-            <Delete02Icon size={13} />
-          </button>
+
+          {/* Context menu — only visible on hover, only rendered for owners */}
+          {isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 shrink-0 transition-all rounded-lg hover:bg-muted"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVerticalIcon size={14} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                >
+                  <Edit01Icon className="mr-2 h-4 w-4" />
+                  Edit Task
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowConfirmDelete(true);
+                  }}
+                >
+                  <Delete02Icon className="mr-2 h-4 w-4" />
+                  Delete Task
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Tags */}

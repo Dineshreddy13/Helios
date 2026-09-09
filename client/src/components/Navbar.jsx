@@ -42,6 +42,19 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -80,6 +93,7 @@ const Navbar = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [processingId, setProcessingId] = useState(null);
+  const [openProjectPopover, setOpenProjectPopover] = useState(false);
   const setTheme = useThemeStore((state) => state.setTheme);
 
   useEffect(() => {
@@ -155,23 +169,40 @@ const Navbar = () => {
                   <>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger render={
+                      <Popover open={openProjectPopover} onOpenChange={setOpenProjectPopover}>
+                        <PopoverTrigger render={
                           <button className="flex items-center gap-1 font-semibold text-foreground hover:bg-muted px-2 py-1 rounded-md transition-colors">
                             {currentProject.name}
                             <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5" />
                           </button>
                         } />
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuGroup>
-                            {projects.map((project) => (
-                              <DropdownMenuItem key={project.id} onClick={() => navigate(`/projects/${project.id}`)}>
-                                {project.name}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        <PopoverContent align="start" className="w-[280px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search projects..." />
+                            <CommandList>
+                              <CommandEmpty>No project found.</CommandEmpty>
+                              <CommandGroup>
+                                {projects.map((project) => (
+                                  <CommandItem
+                                    key={project.id}
+                                    value={project.name}
+                                    onSelect={() => {
+                                      setOpenProjectPopover(false);
+                                      navigate(`/projects/${project.id}`);
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    {project.name}
+                                    {currentProject.id === project.id && (
+                                      <CheckmarkBadge01Icon className="ml-auto size-4" />
+                                    )}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </BreadcrumbItem>
                   </>
                 )}
