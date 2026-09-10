@@ -100,3 +100,31 @@ export const addDependencySchema = z.object({
   blockingTaskId: z.string().uuid("Please provide a valid blocking task UUID."),
 });
 
+export const createTodoSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, VALIDATION_MSG.TODO_TITLE_MIN)
+    .max(500, VALIDATION_MSG.TODO_TITLE_MAX),
+});
+
+export const updateTodoSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(1, VALIDATION_MSG.TODO_TITLE_MIN)
+      .max(500, VALIDATION_MSG.TODO_TITLE_MAX)
+      .optional(),
+    completed: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: VALIDATION_MSG.AT_LEAST_ONE_FIELD,
+  });
+
+export const reorderTodosSchema = z.object({
+  orderedIds: z
+    .array(z.string().uuid())
+    .min(1, VALIDATION_MSG.TODO_IDS_INVALID),
+});
+

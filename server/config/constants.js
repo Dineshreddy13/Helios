@@ -123,6 +123,14 @@ export const TASK_MSG = {
     UPDATED: "Task updated successfully.",
 };
 
+export const TODO_MSG = {
+    CREATED: "Todo created successfully.",
+    DELETED: "Todo deleted successfully.",
+    NOT_FOUND: "Todo not found.",
+    REORDERED: "Todos reordered successfully.",
+    UPDATED: "Todo updated successfully.",
+};
+
 // VALIDATION MESSAGES
 export const VALIDATION_MSG = {
     // General
@@ -165,6 +173,11 @@ export const VALIDATION_MSG = {
     TASK_TAGS_MAX: "A task can have at most 10 tags.",
     TASK_TITLE_MAX: "Task title must be at most 200 characters long.",
     TASK_TITLE_MIN: "Task title must be at least 1 character long.",
+
+    // Todos
+    TODO_TITLE_MAX: "Todo title must be at most 500 characters long.",
+    TODO_TITLE_MIN: "Todo title must be at least 1 character long.",
+    TODO_IDS_INVALID: "orderedIds must be an array of valid UUIDs.",
 
     // Discussions
     DISCUSSION_CONTENT_MAX: "Message must be at most 2000 characters long.",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight01Icon, File02Icon, Cancel01Icon, CheckmarkCircle02Icon, CircleIcon, Upload01Icon, Calendar01Icon, Tag01Icon, UserIcon, File01Icon, Notification01Icon, ArrowDown01Icon } from 'hugeicons-react';
+import { ArrowRight01Icon, File02Icon, Cancel01Icon, CheckmarkCircle02Icon, CircleIcon, Upload01Icon, Calendar01Icon, Tag01Icon, UserIcon, File01Icon, Notification01Icon, ArrowDown01Icon, ListViewIcon, PlusSignIcon } from 'hugeicons-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { addDependencyApi, removeDependencyApi, getDependenciesApi } from '../api/task.api';
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import useProjectStore from '../store/projectStore';
 import useListStore from '../store/listStore';
 import useTaskStore from '../store/taskStore';
+import useTodoStore from '../store/todoStore';
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -80,6 +81,159 @@ const TaskDescriptionEditor = ({ task, updateTask }) => {
   );
 };
 
+// ── TodoSection ────────────────────────────────────────────────────────────────
+const TodoSection = ({ taskId }) => {
+  const { todosByTaskId, fetchTodos, createTodo, updateTodo, deleteTodo } = useTodoStore();
+  const todos = todosByTaskId[taskId] || [];
+
+  const [newTitle, setNewTitle] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [showInput, setShowInput] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    fetchTodos(taskId);
+  }, [taskId]);
+
+  useEffect(() => {
+    if (showInput) inputRef.current?.focus();
+  }, [showInput]);
+
+  const completedCount = todos.filter((t) => t.completed).length;
+  const progress = todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0;
+
+  const handleAdd = async () => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) return;
+    setIsAdding(true);
+    try {
+      await createTodo(taskId, trimmed);
+      setNewTitle('');
+      setShowInput(false);
+    } catch {}
+    finally { setIsAdding(false); }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleAdd();
+    if (e.key === 'Escape') { setShowInput(false); setNewTitle(''); }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-semibold">Checklist</h2>
+          {todos.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {completedCount}/{todos.length}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => setShowInput(true)}
+          className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"
+          title="Add checklist item"
+        >
+          <PlusSignIcon className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      {todos.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{progress}% complete</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                progress === 100 ? "bg-green-500" : "bg-primary"
+              )}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Todo list */}
+      <div className="space-y-1">
+        {todos.map((todo) => (
+          <div
+            key={todo.id}
+            className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            <button
+              onClick={() => updateTodo(taskId, todo.id, { completed: !todo.completed })}
+              className={cn(
+                "flex-none w-4 h-4 rounded border-2 flex items-center justify-center transition-all",
+                todo.completed
+                  ? "bg-green-500 border-green-500 text-white"
+                  : "border-muted-foreground hover:border-primary"
+              )}
+              aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
+            >
+              {todo.completed && <CheckmarkCircle02Icon className="w-3 h-3" />}
+            </button>
+            <span
+              className={cn(
+                "flex-1 text-sm",
+                todo.completed && "line-through text-muted-foreground"
+              )}
+            >
+              {todo.title}
+            </span>
+            <button
+              onClick={() => deleteTodo(taskId, todo.id)}
+              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 rounded"
+              aria-label="Delete todo"
+            >
+              <Cancel01Icon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+
+        {/* Add input — card style, two rows */}
+        {showInput ? (
+          <div className="bg-background border border-border rounded-xl p-2 flex flex-col gap-2 mt-1">
+            <input
+              ref={inputRef}
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Checklist item..."
+              disabled={isAdding}
+              className="w-full text-sm bg-transparent outline-none placeholder:text-muted-foreground/60 px-1"
+            />
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={handleAdd} disabled={isAdding || !newTitle.trim()}>
+                {isAdding ? 'Adding...' : 'Add'}
+              </Button>
+              <button
+                onClick={() => { setShowInput(false); setNewTitle(''); }}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+                disabled={isAdding}
+              >
+                <Cancel01Icon size={15} />
+              </button>
+            </div>
+          </div>
+        ) : todos.length === 0 ? (
+          <button
+            onClick={() => setShowInput(true)}
+            className="w-full text-left flex items-center gap-3 px-3 py-4 rounded-xl border border-dashed text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/20 transition-all text-sm"
+          >
+            <PlusSignIcon className="w-4 h-4" />
+            Add your first checklist item
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
 const TaskPage = () => {
   const { projectId, taskId } = useParams();
   const navigate = useNavigate();
@@ -87,6 +241,7 @@ const TaskPage = () => {
   const { currentProject, fetchProjectById } = useProjectStore();
   const { lists, fetchLists, setupSocketListeners: setupListSockets, teardownSocketListeners: teardownListSockets } = useListStore();
   const { tasksByListId, fetchTasks, updateTask, uploadTaskFiles, deleteTaskFile, setupSocketListeners: setupTaskSockets, teardownSocketListeners: teardownTaskSockets } = useTaskStore();
+  const { setupTodoSocketListeners, teardownTodoSocketListeners } = useTodoStore();
 
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -128,11 +283,14 @@ const TaskPage = () => {
       setupTaskSockets(projectId);
     });
 
+    setupTodoSocketListeners();
+
     return () => {
       teardownListSockets(projectId);
       teardownTaskSockets(projectId);
+      teardownTodoSocketListeners();
     };
-  }, [projectId, fetchProjectById, fetchLists, setupListSockets, teardownListSockets, fetchTasks, setupTaskSockets, teardownTaskSockets]);
+  }, [projectId, fetchProjectById, fetchLists, setupListSockets, teardownListSockets, fetchTasks, setupTaskSockets, teardownTaskSockets, setupTodoSocketListeners, teardownTodoSocketListeners]);
 
   // Find the task and its parent list
   const { task, list } = useMemo(() => {
@@ -277,7 +435,12 @@ const TaskPage = () => {
   return (
     <>
       <div className="flex flex-col items-center px-4 sm:px-6 justify-start pt-8 pb-12 min-h-[calc(100vh-65px)] w-full">
-        <div className="w-full max-w-4xl space-y-8">
+        <div className="w-full max-w-7xl">
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+            {/* Main content */}
+            <div className="lg:col-span-4 space-y-8">
 
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -436,37 +599,37 @@ const TaskPage = () => {
               <h2 className="text-xl font-semibold w-full text-left md:text-right">Timeline</h2>
               <Card className="w-full md:w-fit p-0 bg-card/50">
                 <CardContent className="p-0 flex justify-center md:justify-end">
-                  <Calendar
-                    mode="range"
-                    defaultMonth={new Date()}
-                    selected={{
-                      from: new Date(),
-                      to: task.dueDate ? new Date(task.dueDate) : new Date(),
-                    }}
-                    numberOfMonths={1}
-                    captionLayout="dropdown"
-                    formatters={{
-                      formatMonthDropdown: (date) => {
-                        return date.toLocaleString("default", { month: "long" })
-                      },
-                    }}
-                    components={{
-                      DayButton: ({ children, modifiers, day, ...props }) => {
-                        const isDeadline = task.dueDate && day.date.toDateString() === new Date(task.dueDate).toDateString();
+                    <Calendar
+                      mode="range"
+                      defaultMonth={new Date()}
+                      selected={{
+                        from: new Date(),
+                        to: task.dueDate ? new Date(task.dueDate) : new Date(),
+                      }}
+                      numberOfMonths={1}
+                      captionLayout="dropdown"
+                      formatters={{
+                        formatMonthDropdown: (date) => {
+                          return date.toLocaleString("default", { month: "long" })
+                        },
+                      }}
+                      components={{
+                        DayButton: ({ children, modifiers, day, ...props }) => {
+                          const isDeadline = task.dueDate && day.date.toDateString() === new Date(task.dueDate).toDateString();
 
-                        return (
-                          <CalendarDayButton
-                            day={day}
-                            modifiers={modifiers}
-                            {...props}
-                            className={`${props.className || ''} ${isDeadline ? '!bg-destructive !text-destructive-foreground hover:!bg-destructive/90' : ''}`}
-                          >
-                            {children}
-                          </CalendarDayButton>
-                        )
-                      },
-                    }}
-                  />
+                          return (
+                            <CalendarDayButton
+                              day={day}
+                              modifiers={modifiers}
+                              {...props}
+                              className={`${props.className || ''} ${isDeadline ? '!bg-destructive !text-destructive-foreground hover:!bg-destructive/90' : ''}`}
+                            >
+                              {children}
+                            </CalendarDayButton>
+                          )
+                        },
+                      }}
+                    />
                 </CardContent>
               </Card>
             </div>
@@ -656,6 +819,16 @@ const TaskPage = () => {
             </div>
           </div>
 
+            </div> {/* end main content col-span-4 */}
+
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-[89px]">
+                <TodoSection taskId={taskId} />
+              </div>
+            </div>
+
+          </div> {/* end grid */}
         </div>
       </div>
 

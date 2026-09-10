@@ -53,3 +53,25 @@ export const getDependenciesApi = async (taskId) => {
   const { data: res } = await api.get(`/api/v1/projects/tasks/${taskId}/dependencies`);
   return res;
 };
+
+// ── Todo (Subtask) APIs ────────────────────────────────────────────────────
+
+export const getTodosApi = async (taskId) => {
+  const { data: res } = await api.get(`/api/v1/projects/tasks/${taskId}/todos`);
+  return res;
+};
+
+export const createTodoApi = async (taskId, data) => {
+  const { data: res } = await api.post(`/api/v1/projects/tasks/${taskId}/todos`, data);
+  return res;
+};
+
+export const updateTodoApi = async (taskId, todoId, data) => {
+  const { data: res } = await api.patch(`/api/v1/projects/tasks/${taskId}/todos/${todoId}`, data);
+  return res;
+};
+
+export const deleteTodoApi = async (taskId, todoId) => {
+  const { data: res } = await api.delete(`/api/v1/projects/tasks/${taskId}/todos/${todoId}`);
+  return res;
+};
