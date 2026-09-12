@@ -17,6 +17,12 @@ const useAuthStore = create((set) => ({
     disconnectSocket();
     set({ isAuthenticated: false, user: null });
   },
+  // Merge a partial update into the current user object.
+  // Used by profile/avatar updates so every component re-renders automatically.
+  updateUser: (patch) => set((state) => ({
+    user: state.user ? { ...state.user, ...patch } : state.user,
+  })),
 }));
 
 export default useAuthStore;
+

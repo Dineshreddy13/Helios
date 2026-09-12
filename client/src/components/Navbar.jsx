@@ -308,6 +308,7 @@ const Navbar = () => {
               <DropdownMenuTrigger render={
                 <Button variant="ghost" size="icon" className="rounded-full overflow-hidden border border-border hover:border-muted-foreground transition-colors size-8">
                   <Avatar className="size-full">
+                    <AvatarImage src={user?.avatarUrl} alt={user?.username} />
                     <AvatarFallback className="bg-muted text-muted-foreground font-medium uppercase text-sm">
                       {user?.username?.charAt(0) || 'U'}
                     </AvatarFallback>
@@ -322,7 +323,7 @@ const Navbar = () => {
                   </div>
                 </div>
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuSub>
