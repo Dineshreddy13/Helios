@@ -20,6 +20,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const CreateProject = lazy(() => import('./pages/CreateProject'));
 const TaskPage = lazy(() => import('./pages/TaskPage'));
 const ProjectCalendar = lazy(() => import('./pages/ProjectCalendar'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 const AppRoutes = () => {
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -104,6 +105,7 @@ const AppRoutes = () => {
       />
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/projects/new" element={<CreateProject />} />
         <Route path="/projects/:projectId" element={<Project />} />
         <Route path="/projects/:projectId/calendar" element={<ProjectCalendar />} />
@@ -116,6 +118,7 @@ const AppRoutes = () => {
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
     </Suspense>
   );
 };

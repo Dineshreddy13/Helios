@@ -66,6 +66,13 @@ export const AUTH_MSG = {
 };
 
 // FEATURE MESSAGES
+export const USER_MSG = {
+    AVATAR_UPDATED: "Avatar updated successfully.",
+    NOT_FOUND: "User not found.",
+    PROFILE_UPDATED: "Profile updated successfully.",
+    UNAUTHORIZED: "You can only edit your own profile.",
+};
+
 export const DISCUSSION_MSG = {
     DELETED: "Message deleted successfully.",
     NOT_AUTHOR: "You can only modify your own messages.",
@@ -138,6 +145,13 @@ export const VALIDATION_MSG = {
     INVALID_USER_ID: "Please provide a valid user ID.",
     SEARCH_QUERY_MAX: "Search query must be at most 100 characters long.",
     SEARCH_QUERY_MIN: "Search query must be at least 1 character long.",
+
+    // Profile
+    BIO_MAX: "Bio must be at most 300 characters long.",
+    DISPLAY_NAME_MAX: "Display name must be at most 50 characters long.",
+    INVALID_URL: "Please provide a valid URL.",
+    LOCATION_MAX: "Location must be at most 100 characters long.",
+    STATUS_MAX: "Status must be at most 100 characters long.",
 
     // Auth & Users
     EMAIL_INVALID: "Please provide a valid email address.",

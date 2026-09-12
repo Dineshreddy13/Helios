@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
 
+// ── Task attachment upload ────────────────────────────────────────────────────
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -52,5 +53,39 @@ export const upload = multer({
     limits: {
         fileSize: 50 * 1024 * 1024, // 50 MB per file
         files: 5,
+    },
+});
+
+// ── Avatar upload ─────────────────────────────────────────────────────────────
+const AVATAR_ALLOWED_MIME_TYPES = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+]);
+
+const avatarStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "helios/avatars",
+        resource_type: "image",
+        public_id: (req, _file) => `avatar-${req.user.id}-${uuidv4()}`,
+    },
+});
+
+const avatarFileFilter = (_req, file, cb) => {
+    if (AVATAR_ALLOWED_MIME_TYPES.has(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error(`Only image files are allowed for avatars. Got: ${file.mimetype}`), false);
+    }
+};
+
+export const uploadAvatar = multer({
+    storage: avatarStorage,
+    fileFilter: avatarFileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5 MB
+        files: 1,
     },
 });
