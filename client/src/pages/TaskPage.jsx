@@ -37,6 +37,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 const TaskDescriptionEditor = ({ task, updateTask }) => {
@@ -110,7 +112,7 @@ const TodoSection = ({ taskId }) => {
       await createTodo(taskId, trimmed);
       setNewTitle('');
       setShowInput(false);
-    } catch {}
+    } catch { }
     finally { setIsAdding(false); }
   };
 
@@ -131,13 +133,13 @@ const TodoSection = ({ taskId }) => {
             </span>
           )}
         </div>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setShowInput(true)}
-          className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"
-          title="Add checklist item"
         >
-          <PlusSignIcon className="w-4 h-4" />
-        </button>
+          <PlusSignIcon className="w-3.5 h-3.5" />
+        </Button>
       </div>
 
       {/* Progress bar */}
@@ -146,15 +148,7 @@ const TodoSection = ({ taskId }) => {
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{progress}% complete</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                progress === 100 ? "bg-green-500" : "bg-primary"
-              )}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          <Progress value={progress} />
         </div>
       )}
 
@@ -165,59 +159,57 @@ const TodoSection = ({ taskId }) => {
             key={todo.id}
             className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
           >
-            <button
-              onClick={() => updateTodo(taskId, todo.id, { completed: !todo.completed })}
+            <Checkbox
+              id={`todo-${todo.id}`}
+              checked={todo.completed}
+              onCheckedChange={(checked) => updateTodo(taskId, todo.id, { completed: !!checked })}
+              className="flex-none"
+            />
+            <label
+              htmlFor={`todo-${todo.id}`}
               className={cn(
-                "flex-none w-4 h-4 rounded border-2 flex items-center justify-center transition-all",
-                todo.completed
-                  ? "bg-green-500 border-green-500 text-white"
-                  : "border-muted-foreground hover:border-primary"
-              )}
-              aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
-            >
-              {todo.completed && <CheckmarkCircle02Icon className="w-3 h-3" />}
-            </button>
-            <span
-              className={cn(
-                "flex-1 text-sm",
+                "flex-1 text-sm cursor-pointer select-none",
                 todo.completed && "line-through text-muted-foreground"
               )}
             >
               {todo.title}
-            </span>
-            <button
+            </label>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => deleteTodo(taskId, todo.id)}
-              className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 rounded"
+              className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-muted-foreground hover:text-destructive transition-all"
               aria-label="Delete todo"
             >
               <Cancel01Icon className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         ))}
 
-        {/* Add input — card style, two rows */}
+        {/* Add input */}
         {showInput ? (
           <div className="bg-background border border-border rounded-xl p-2 flex flex-col gap-2 mt-1">
-            <input
+            <Input
               ref={inputRef}
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Checklist item..."
               disabled={isAdding}
-              className="w-full text-sm bg-transparent outline-none placeholder:text-muted-foreground/60 px-1"
+              className="h-8 text-sm shadow-none border-0 bg-transparent focus-visible:ring-0 px-1"
             />
             <div className="flex items-center gap-2">
               <Button size="sm" onClick={handleAdd} disabled={isAdding || !newTitle.trim()}>
                 {isAdding ? 'Adding...' : 'Add'}
               </Button>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => { setShowInput(false); setNewTitle(''); }}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
                 disabled={isAdding}
               >
-                <Cancel01Icon size={15} />
-              </button>
+                Cancel
+              </Button>
             </div>
           </div>
         ) : todos.length === 0 ? (
@@ -442,388 +434,385 @@ const TaskPage = () => {
             {/* Main content */}
             <div className="lg:col-span-4 space-y-8">
 
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-            <div className="space-y-3">
-              <h1 className="text-3xl font-bold tracking-tight">{task.title}</h1>
+              {/* Header */}
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-bold tracking-tight">{task.title}</h1>
 
-              {/* Assignee & Tags */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <UserIcon className="w-4 h-4" />
-                  <span className="font-medium text-foreground">{task.assignee ? task.assignee.username : 'Unassigned'}</span>
+                  {/* Assignee & Tags */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <UserIcon className="w-4 h-4" />
+                      <span className="font-medium text-foreground">{task.assignee ? task.assignee.username : 'Unassigned'}</span>
+                    </div>
+
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <Tag01Icon className="w-4 h-4" />
+                        <div className="flex flex-wrap gap-1.5">
+                          {task.tags.map(tag => (
+                            <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/25">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full border-transparent transition-opacity hover:opacity-80">
+                          {(() => {
+                            const pInfo = PRIORITY_MAP[task.priority || 'medium'];
+                            const Icon = pInfo.icon;
+                            return (
+                              <Badge variant={pInfo.variant} className="flex items-center gap-1.5 cursor-pointer">
+                                <Icon size={14} />
+                                {pInfo.label}
+                              </Badge>
+                            );
+                          })()}
+                        </button>
+                      } />
+                      <DropdownMenuContent align="start">
+                        {Object.entries(PRIORITY_MAP).map(([key, { label, icon: Icon, color }]) => (
+                          <DropdownMenuItem key={key} onClick={() => updateTask(task.id, { priority: key })}>
+                            <Icon className={cn("mr-2 h-4 w-4", color)} />
+                            {label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Dialog open={openReminder} onOpenChange={setOpenReminder}>
+                      <DialogTrigger asChild>
+                        <button className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium hover:bg-muted transition-colors border border-transparent hover:border-border">
+                          <Notification01Icon className={cn("w-4 h-4", task.reminderAt ? "text-orange-500" : "text-muted-foreground")} />
+                          <span className={cn("font-medium", task.reminderAt ? "text-foreground" : "text-muted-foreground")}>
+                            {task.reminderAt ? `Reminder: ${format(new Date(task.reminderAt), "PP p")}` : 'Set Reminder'}
+                          </span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Set Reminder</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4 flex flex-col items-center">
+                          <FieldGroup className="flex flex-row gap-4 w-full justify-center items-end">
+                            <Field>
+                              <FieldLabel htmlFor="date-picker-optional">Date</FieldLabel>
+                              <Popover open={openDatePopover} onOpenChange={setOpenDatePopover}>
+                                <PopoverTrigger asChild>
+                                  <Button variant="outline" id="date-picker-optional" className="w-[200px] justify-between font-normal">
+                                    {reminderDate ? format(reminderDate, "PPP") : "Select date"}
+                                    <ArrowDown01Icon className="ml-2 h-4 w-4 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={reminderDate}
+                                    captionLayout="dropdown"
+                                    defaultMonth={reminderDate}
+                                    onSelect={(date) => {
+                                      setReminderDate(date);
+                                      setOpenDatePopover(false);
+                                    }}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </Field>
+                            <Field className="w-32">
+                              <FieldLabel htmlFor="time-picker-optional">Time</FieldLabel>
+                              <Input
+                                type="time"
+                                id="time-picker-optional"
+                                value={reminderTime}
+                                onChange={(e) => setReminderTime(e.target.value)}
+                                className="font-normal text-foreground appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                              />
+                            </Field>
+                          </FieldGroup>
+                        </div>
+
+                        <DialogFooter className="flex justify-between items-center sm:justify-between w-full pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setReminderDate(undefined);
+                              setReminderTime("10:30");
+                            }}
+                            disabled={isSavingReminder || !reminderDate}
+                          >
+                            Clear
+                          </Button>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setOpenReminder(false)}>
+                              Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleSaveReminder} disabled={isSavingReminder}>
+                              {isSavingReminder ? 'Saving...' : 'Save'}
+                            </Button>
+                          </div>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
 
-                {task.tags && task.tags.length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <Tag01Icon className="w-4 h-4" />
-                    <div className="flex flex-wrap gap-1.5">
-                      {task.tags.map(tag => (
-                        <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/25">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger render={
-                    <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full border-transparent transition-opacity hover:opacity-80">
-                      {(() => {
-                        const pInfo = PRIORITY_MAP[task.priority || 'medium'];
-                        const Icon = pInfo.icon;
-                        return (
-                          <Badge variant={pInfo.variant} className="flex items-center gap-1.5 cursor-pointer">
-                            <Icon size={14} />
-                            {pInfo.label}
-                          </Badge>
-                        );
-                      })()}
-                    </button>
-                  } />
-                  <DropdownMenuContent align="start">
-                    {Object.entries(PRIORITY_MAP).map(([key, { label, icon: Icon, color }]) => (
-                      <DropdownMenuItem key={key} onClick={() => updateTask(task.id, { priority: key })}>
-                        <Icon className={cn("mr-2 h-4 w-4", color)} />
-                        {label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Dialog open={openReminder} onOpenChange={setOpenReminder}>
-                  <DialogTrigger asChild>
-                    <button className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium hover:bg-muted transition-colors border border-transparent hover:border-border">
-                      <Notification01Icon className={cn("w-4 h-4", task.reminderAt ? "text-orange-500" : "text-muted-foreground")} />
-                      <span className={cn("font-medium", task.reminderAt ? "text-foreground" : "text-muted-foreground")}>
-                        {task.reminderAt ? `Reminder: ${format(new Date(task.reminderAt), "PP p")}` : 'Set Reminder'}
-                      </span>
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Set Reminder</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4 flex flex-col items-center">
-                      <FieldGroup className="flex flex-row gap-4 w-full justify-center items-end">
-                        <Field>
-                          <FieldLabel htmlFor="date-picker-optional">Date</FieldLabel>
-                          <Popover open={openDatePopover} onOpenChange={setOpenDatePopover}>
-                            <PopoverTrigger asChild>
-                              <Button variant="outline" id="date-picker-optional" className="w-[200px] justify-between font-normal">
-                                {reminderDate ? format(reminderDate, "PPP") : "Select date"}
-                                <ArrowDown01Icon className="ml-2 h-4 w-4 opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={reminderDate}
-                                captionLayout="dropdown"
-                                defaultMonth={reminderDate}
-                                onSelect={(date) => {
-                                  setReminderDate(date);
-                                  setOpenDatePopover(false);
-                                }}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </Field>
-                        <Field className="w-32">
-                          <FieldLabel htmlFor="time-picker-optional">Time</FieldLabel>
-                          <Input
-                            type="time"
-                            id="time-picker-optional"
-                            value={reminderTime}
-                            onChange={(e) => setReminderTime(e.target.value)}
-                            className="font-normal text-foreground appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                          />
-                        </Field>
-                      </FieldGroup>
-                    </div>
-
-                    <DialogFooter className="flex justify-between items-center sm:justify-between w-full pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setReminderDate(undefined);
-                          setReminderTime("10:30");
-                        }}
-                        disabled={isSavingReminder || !reminderDate}
-                      >
-                        Clear
-                      </Button>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => setOpenReminder(false)}>
-                          Cancel
-                        </Button>
-                        <Button size="sm" onClick={handleSaveReminder} disabled={isSavingReminder}>
-                          {isSavingReminder ? 'Saving...' : 'Save'}
-                        </Button>
-                      </div>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            <Button
-              variant={task.status === 'completed' ? 'outline' : 'default'}
-              className="shrink-0"
-              onClick={handleStatusClick}
-              disabled={hasIncompleteBlockers && task.status !== 'completed'}
-              title={hasIncompleteBlockers && task.status !== 'completed' ? "Incomplete dependencies" : ""}
-            >
-              {task.status === 'completed' ? (
-                <>
-                  <CheckmarkCircle02Icon className="w-4 h-4 mr-2 text-green-500" />
-                  Completed
-                </>
-              ) : (
-                <>
-                  <CircleIcon className="w-4 h-4 mr-2" />
-                  Mark as Complete
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-8 justify-between">
-            {/* Description Section */}
-            <TaskDescriptionEditor task={task} updateTask={updateTask} />
-
-            {/* Calendar Section */}
-            <div className="space-y-4 flex-none md:flex md:flex-col md:items-end">
-              <h2 className="text-xl font-semibold w-full text-left md:text-right">Timeline</h2>
-              <Card className="w-full md:w-fit p-0 bg-card/50">
-                <CardContent className="p-0 flex justify-center md:justify-end">
-                    <Calendar
-                      mode="range"
-                      defaultMonth={new Date()}
-                      selected={{
-                        from: new Date(),
-                        to: task.dueDate ? new Date(task.dueDate) : new Date(),
-                      }}
-                      numberOfMonths={1}
-                      captionLayout="dropdown"
-                      formatters={{
-                        formatMonthDropdown: (date) => {
-                          return date.toLocaleString("default", { month: "long" })
-                        },
-                      }}
-                      components={{
-                        DayButton: ({ children, modifiers, day, ...props }) => {
-                          const isDeadline = task.dueDate && day.date.toDateString() === new Date(task.dueDate).toDateString();
-
-                          return (
-                            <CalendarDayButton
-                              day={day}
-                              modifiers={modifiers}
-                              {...props}
-                              className={`${props.className || ''} ${isDeadline ? '!bg-destructive !text-destructive-foreground hover:!bg-destructive/90' : ''}`}
-                            >
-                              {children}
-                            </CalendarDayButton>
-                          )
-                        },
-                      }}
-                    />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Files Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Attachments</h2>
-              <div>
-                <input
-                  type="file"
-                  multiple
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  disabled={isUploading || (task.files?.length >= 5)}
-                />
                 <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isUploading || (task.files?.length >= 5)}
-                  onClick={() => fileInputRef.current?.click()}
+                  variant={task.status === 'completed' ? 'outline' : 'default'}
+                  className="shrink-0"
+                  onClick={handleStatusClick}
+                  disabled={hasIncompleteBlockers && task.status !== 'completed'}
+                  title={hasIncompleteBlockers && task.status !== 'completed' ? "Incomplete dependencies" : ""}
                 >
-                  <Upload01Icon className="w-4 h-4 mr-2" />
-                  Upload Files
+                  {task.status === 'completed' ? (
+                    <>
+                      <CheckmarkCircle02Icon className="w-4 h-4 mr-2 text-green-500" />
+                      Completed
+                    </>
+                  ) : (
+                    <>
+                      <CircleIcon className="w-4 h-4 mr-2" />
+                      Mark as Complete
+                    </>
+                  )}
                 </Button>
               </div>
-            </div>
 
-            {task.files && task.files.length >= 5 && (
-              <p className="text-xs text-amber-500">Maximum file limit (5) reached.</p>
-            )}
+              <div className="flex flex-col md:flex-row gap-8 justify-between">
+                {/* Description Section */}
+                <TaskDescriptionEditor task={task} updateTask={updateTask} />
 
-            <div className="flex flex-col gap-3 py-4">
-              {task.files?.filter(f => f.mimeType.startsWith('image/')).length > 0 && (
-                <AttachmentGroup>
-                  {task.files.filter(f => f.mimeType.startsWith('image/')).map((file) => {
-                    const fileUrl = file.url.startsWith('http') ? file.url : `${apiUrl}${file.url}`;
-
-                    return (
-                      <Attachment key={file.id} orientation="vertical">
-                        <AttachmentMedia variant="image">
-                          <img src={fileUrl} alt={file.name} className="object-cover w-full h-full" />
-                        </AttachmentMedia>
-                        <AttachmentContent>
-                          <AttachmentTitle>{file.name}</AttachmentTitle>
-                          <AttachmentDescription>
-                            {file.mimeType.split('/')[1]?.toUpperCase() || 'FILE'} · {formatFileSize(file.size)}
-                          </AttachmentDescription>
-                        </AttachmentContent>
-                        <AttachmentActions>
-                          <AttachmentAction aria-label="Remove attachment" onClick={() => handleDeleteFile(file.id)}>
-                            <Cancel01Icon className="w-4 h-4" />
-                          </AttachmentAction>
-                        </AttachmentActions>
-                      </Attachment>
-                    );
-                  })}
-                </AttachmentGroup>
-              )}
-
-              {task.files?.filter(f => !f.mimeType.startsWith('image/')).map((file) => (
-                <Attachment key={file.id} className="w-full sm:max-w-md">
-                  <AttachmentMedia>
-                    <File02Icon className="w-5 h-5 text-muted-foreground" />
-                  </AttachmentMedia>
-                  <AttachmentContent>
-                    <AttachmentTitle>{file.name}</AttachmentTitle>
-                    <AttachmentDescription>
-                      {file.mimeType.split('/')[1]?.toUpperCase() || 'FILE'} · {formatFileSize(file.size)}
-                    </AttachmentDescription>
-                  </AttachmentContent>
-                  <AttachmentActions>
-                    <AttachmentAction aria-label="Remove attachment" onClick={() => handleDeleteFile(file.id)}>
-                      <Cancel01Icon className="w-4 h-4" />
-                    </AttachmentAction>
-                  </AttachmentActions>
-                </Attachment>
-              ))}
-
-              {isUploading && (
-                <Attachment className="w-full sm:max-w-md">
-                  <AttachmentMedia>
-                    <Spinner className="text-primary w-5 h-5" />
-                  </AttachmentMedia>
-                  <AttachmentContent>
-                    <AttachmentTitle>Uploading file(s)...</AttachmentTitle>
-                    <AttachmentDescription>Please wait</AttachmentDescription>
-                  </AttachmentContent>
-                </Attachment>
-              )}
-
-              {(!task.files || task.files.length === 0) && !isUploading && (
-                <div className="text-center py-12 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
-                  <File01Icon className="w-8 h-8 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">No attachments yet.</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Dependencies Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Dependencies (Blocked By)</h2>
-              <Popover open={openAddDependency} onOpenChange={setOpenAddDependency}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Add Blocker
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0" align="end">
-                  <Command>
-                    <CommandInput placeholder="Search tasks..." value={dependencySearch} onValueChange={setDependencySearch} />
-                    <CommandList>
-                      <CommandEmpty>No tasks found.</CommandEmpty>
-                      <CommandGroup>
-                        {Object.values(tasksByListId)
-                          .flat()
-                          .filter(t => t.id !== task.id && !dependencies.some(d => d.blockingTaskId === t.id))
-                          .map(t => (
-                            <CommandItem
-                              key={t.id}
-                              value={t.title}
-                              onSelect={async () => {
-                                setOpenAddDependency(false);
+                {/* Dependencies - moved here in place of Timeline */}
+                <div className="space-y-4 flex-none">
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-xl font-semibold">Dependencies</h2>
+                    <Popover open={openAddDependency} onOpenChange={setOpenAddDependency}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <PlusSignIcon className="" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0" align="end">
+                        <Command>
+                          <CommandInput placeholder="Search tasks..." value={dependencySearch} onValueChange={setDependencySearch} />
+                          <CommandList>
+                            <CommandEmpty>No tasks found.</CommandEmpty>
+                            <CommandGroup>
+                              {Object.values(tasksByListId)
+                                .flat()
+                                .filter(t => t.id !== task.id && !dependencies.some(d => d.blockingTaskId === t.id))
+                                .map(t => (
+                                  <CommandItem
+                                    key={t.id}
+                                    value={t.title}
+                                    onSelect={async () => {
+                                      setOpenAddDependency(false);
+                                      try {
+                                        await addDependencyApi(task.id, { blockingTaskId: t.id });
+                                        const updatedDeps = await getDependenciesApi(task.id);
+                                        setDependencies(updatedDeps.dependencies);
+                                      } catch (err) {
+                                        alert(err.response?.data?.message || "Failed to add dependency");
+                                      }
+                                    }}
+                                  >
+                                    <CheckmarkCircle02Icon className={cn("mr-2 h-4 w-4 shrink-0", t.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
+                                    <span className="truncate">{t.title}</span>
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="flex flex-col gap-2 min-w-[260px]">
+                    {isLoadingDependencies ? (
+                      <div className="flex justify-center py-8 border border-dashed rounded-xl text-muted-foreground bg-muted/20"><Spinner className="w-5 h-5" /></div>
+                    ) : dependencies.length > 0 ? (
+                      dependencies.map(dep => {
+                        const allTasks = Object.values(tasksByListId).flat();
+                        const storeTask = allTasks.find(t => t.id === dep.blockingTaskId);
+                        const blockingTask = storeTask || dep.blockingTask;
+                        return (
+                          <div key={dep.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <CheckmarkCircle02Icon className={cn("w-4 h-4 shrink-0", blockingTask.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
+                              <span className="text-sm font-medium truncate">{blockingTask.title}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-destructive shrink-0 h-6 w-6 p-0"
+                              onClick={async () => {
                                 try {
-                                  const res = await addDependencyApi(task.id, { blockingTaskId: t.id });
-                                  // Wait, the API returns the dependency which has no 'blockingTask' field fully populated like getDependenciesApi does.
-                                  // Let's refetch dependencies to get the populated data.
-                                  const updatedDeps = await getDependenciesApi(task.id);
-                                  setDependencies(updatedDeps.dependencies);
+                                  await removeDependencyApi(task.id, dep.blockingTaskId);
+                                  setDependencies(prev => prev.filter(d => d.id !== dep.id));
                                 } catch (err) {
-                                  alert(err.response?.data?.message || "Failed to add dependency");
+                                  console.error(err);
                                 }
                               }}
                             >
-                              <CheckmarkCircle02Icon className={cn("mr-2 h-4 w-4 shrink-0", t.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
-                              <span className="truncate">{t.title}</span>
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+                              <Cancel01Icon className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-6 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
+                        <p className="text-sm">No blockers.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-3 py-4">
-              {isLoadingDependencies ? (
-                <div className="flex justify-center py-8 border border-dashed rounded-xl text-muted-foreground bg-muted/20"><Spinner className="w-5 h-5" /></div>
-              ) : dependencies.length > 0 ? (
-                dependencies.map(dep => {
-                  const allTasks = Object.values(tasksByListId).flat();
-                  const storeTask = allTasks.find(t => t.id === dep.blockingTaskId);
-                  const blockingTask = storeTask || dep.blockingTask;
-                  return (
-                  <div key={dep.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <CheckmarkCircle02Icon className={cn("w-5 h-5 shrink-0", blockingTask.status === 'completed' ? "text-green-500" : "text-muted-foreground")} />
-                      <span className="font-medium truncate">{blockingTask.title}</span>
-                    </div>
-                    <Button 
-                      variant="ghost" 
+              {/* Files Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Attachments</h2>
+                  <div>
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      disabled={isUploading || (task.files?.length >= 5)}
+                    />
+                    <Button
+                      variant="outline"
                       size="sm"
-                      className="text-muted-foreground hover:text-destructive shrink-0"
-                      onClick={async () => {
-                        try {
-                          await removeDependencyApi(task.id, dep.blockingTaskId);
-                          setDependencies(prev => prev.filter(d => d.id !== dep.id));
-                        } catch (err) {
-                          console.error(err);
-                        }
-                      }}
+                      disabled={isUploading || (task.files?.length >= 5)}
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      <Cancel01Icon className="w-4 h-4" />
+                      <Upload01Icon className="w-4 h-4 mr-2" />
+                      Upload Files
                     </Button>
                   </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
-                  <p className="text-sm">No blocking dependencies.</p>
                 </div>
-              )}
-            </div>
-          </div>
+
+                {task.files && task.files.length >= 5 && (
+                  <p className="text-xs text-amber-500">Maximum file limit (5) reached.</p>
+                )}
+
+                <div className="flex flex-col gap-3 py-4">
+                  {task.files?.filter(f => f.mimeType.startsWith('image/')).length > 0 && (
+                    <AttachmentGroup>
+                      {task.files.filter(f => f.mimeType.startsWith('image/')).map((file) => {
+                        const fileUrl = file.url.startsWith('http') ? file.url : `${apiUrl}${file.url}`;
+
+                        return (
+                          <Attachment key={file.id} orientation="vertical">
+                            <AttachmentMedia variant="image">
+                              <img src={fileUrl} alt={file.name} className="object-cover w-full h-full" />
+                            </AttachmentMedia>
+                            <AttachmentContent>
+                              <AttachmentTitle>{file.name}</AttachmentTitle>
+                              <AttachmentDescription>
+                                {file.mimeType.split('/')[1]?.toUpperCase() || 'FILE'} · {formatFileSize(file.size)}
+                              </AttachmentDescription>
+                            </AttachmentContent>
+                            <AttachmentActions>
+                              <AttachmentAction aria-label="Remove attachment" onClick={() => handleDeleteFile(file.id)}>
+                                <Cancel01Icon className="w-4 h-4" />
+                              </AttachmentAction>
+                            </AttachmentActions>
+                          </Attachment>
+                        );
+                      })}
+                    </AttachmentGroup>
+                  )}
+
+                  {task.files?.filter(f => !f.mimeType.startsWith('image/')).map((file) => (
+                    <Attachment key={file.id} className="w-full sm:max-w-md">
+                      <AttachmentMedia>
+                        <File02Icon className="w-5 h-5 text-muted-foreground" />
+                      </AttachmentMedia>
+                      <AttachmentContent>
+                        <AttachmentTitle>{file.name}</AttachmentTitle>
+                        <AttachmentDescription>
+                          {file.mimeType.split('/')[1]?.toUpperCase() || 'FILE'} · {formatFileSize(file.size)}
+                        </AttachmentDescription>
+                      </AttachmentContent>
+                      <AttachmentActions>
+                        <AttachmentAction aria-label="Remove attachment" onClick={() => handleDeleteFile(file.id)}>
+                          <Cancel01Icon className="w-4 h-4" />
+                        </AttachmentAction>
+                      </AttachmentActions>
+                    </Attachment>
+                  ))}
+
+                  {isUploading && (
+                    <Attachment className="w-full sm:max-w-md">
+                      <AttachmentMedia>
+                        <Spinner className="text-primary w-5 h-5" />
+                      </AttachmentMedia>
+                      <AttachmentContent>
+                        <AttachmentTitle>Uploading file(s)...</AttachmentTitle>
+                        <AttachmentDescription>Please wait</AttachmentDescription>
+                      </AttachmentContent>
+                    </Attachment>
+                  )}
+
+                  {(!task.files || task.files.length === 0) && !isUploading && (
+                    <div className="text-center py-12 border border-dashed rounded-xl text-muted-foreground bg-muted/20">
+                      <File01Icon className="w-8 h-8 mx-auto mb-3 opacity-20" />
+                      <p className="text-sm">No attachments yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
 
             </div> {/* end main content col-span-4 */}
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <div className="sticky top-[89px]">
+              <div className="sticky top-[89px] space-y-8">
+                {/* Timeline Calendar */}
+                <div className="space-y-4">
+                  <h2 className="text-base font-semibold">Timeline</h2>
+                  <Card className="p-0 bg-card/50">
+                    <CardContent className="p-0 flex justify-center">
+                      <Calendar
+                        mode="range"
+                        defaultMonth={new Date()}
+                        selected={{
+                          from: new Date(),
+                          to: task.dueDate ? new Date(task.dueDate) : new Date(),
+                        }}
+                        numberOfMonths={1}
+                        captionLayout="dropdown"
+                        formatters={{
+                          formatMonthDropdown: (date) => {
+                            return date.toLocaleString("default", { month: "long" })
+                          },
+                        }}
+                        components={{
+                          DayButton: ({ children, modifiers, day, ...props }) => {
+                            const isDeadline = task.dueDate && day.date.toDateString() === new Date(task.dueDate).toDateString();
+                            return (
+                              <CalendarDayButton
+                                day={day}
+                                modifiers={modifiers}
+                                {...props}
+                                className={`${props.className || ''} ${isDeadline ? '!bg-destructive !text-destructive-foreground hover:!bg-destructive/90' : ''}`}
+                              >
+                                {children}
+                              </CalendarDayButton>
+                            )
+                          },
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+
                 <TodoSection taskId={taskId} />
               </div>
             </div>

@@ -2,11 +2,13 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useProjectStore from '../store/projectStore';
 import useActivityStore from '../store/activityStore';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CheckmarkCircle02Icon, UserIcon, Tag01Icon, Edit02Icon, CircleIcon } from 'hugeicons-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CheckmarkCircle02Icon, UserIcon, Tag01Icon, Edit02Icon, CircleIcon, Search01Icon, TrelloIcon } from 'hugeicons-react';
 import { formatRelativeTime } from '../utils/date';
+import { useMemo, useState } from 'react';
 
 const Dashboard = () => {
   const { projects, isLoading, error, fetchProjects, clearError } = useProjectStore();
@@ -18,6 +20,16 @@ const Dashboard = () => {
     teardownDashboardSocketListeners
   } = useActivityStore();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    if (!searchQuery) return projects;
+    return projects.filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.ownerUsername?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [projects, searchQuery]);
 
   useEffect(() => {
     fetchProjects();
@@ -71,68 +83,65 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-65px)]">
+      <div className="flex flex-col lg:flex-row min-h-[calc(100vh-65px)] w-full">
 
-        {/* Main Content Area */}
-        <div className="flex-1 p-6 lg:p-8 order-1 w-full">
-          <div className="max-w-5xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-4">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight mb-2">Projects</h1>
-                <p className="text-muted-foreground">Manage your projects here.</p>
-              </div>
-              <div className="flex gap-3">
-                <Button onClick={() => navigate('/projects/new')}>New Project</Button>
-              </div>
-            </div>
+        {/* Left Sidebar - Projects List */}
+        <div className="w-full lg:w-[320px] xl:w-[340px] shrink-0 border-r border-border bg-muted/10 p-4 flex flex-col gap-4 order-1">
+          <div className="flex justify-between items-center px-1">
+            <h2 className="text-sm font-semibold tracking-tight">Projects</h2>
+            <Button variant="default" size="sm" className="h-7 text-xs px-2.5 shadow-none flex items-center gap-1.5" onClick={() => navigate('/projects/new')}>
+              <TrelloIcon className="w-3.5 h-3.5" />
+              New
+            </Button>
+          </div>
 
-            {error && (
-              <div className="flex justify-between items-center mb-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                <span>{error}</span>
-                <button onClick={clearError} className="hover:opacity-70 ml-4">×</button>
-              </div>
-            )}
+          <div className="relative">
+            <Search01Icon className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Find a project..."
+              className="pl-8 h-8 text-sm bg-background shadow-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-            {/* Project List */}
+          <div className="flex flex-col gap-0.5 overflow-y-auto mt-2">
             {isLoading && (!projects || projects.length === 0) ? (
-              <div className="text-center py-12 text-muted-foreground">Loading projects...</div>
-            ) : (!projects || projects.length === 0) ? (
-              <div className="text-center py-16 border border-dashed border-border rounded-2xl">
-                <h3 className="text-xl font-medium mb-2">No projects yet</h3>
-                <p className="text-muted-foreground mb-6">Create your first project to get started.</p>
-                <Button onClick={() => navigate('/projects/new')}>Create a Project</Button>
-              </div>
+              <div className="text-center py-4 text-xs text-muted-foreground">Loading projects...</div>
+            ) : (!filteredProjects || filteredProjects.length === 0) ? (
+              <div className="text-center py-4 text-xs text-muted-foreground">No projects found.</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {projects?.map((project) => (
-                  <div
-                    key={project.id}
-                    className="group cursor-pointer rounded-2xl border border-border bg-card p-5 flex flex-col gap-3 hover:border-primary/40 hover:shadow-md transition-all"
-                    onClick={() => handleProjectClick(project.id)}
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="text-base font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                        {project.name}
-                      </h3>
-                      <Badge variant={project.role === 'owner' ? 'default' : 'secondary'} className="capitalize">{project.role}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                      {project.description || 'No description provided.'}
-                    </p>
-                    <div className="mt-auto pt-3 border-t border-border/50 text-xs text-muted-foreground">
-                      Updated {new Date(project.updatedAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              filteredProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="group flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => handleProjectClick(project.id)}
+                >
+                  <Avatar className="w-5 h-5 rounded-md border border-border">
+                    <AvatarFallback className="text-[9px] rounded-md bg-primary/10 text-primary">
+                      {project.ownerUsername ? project.ownerUsername[0].toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium text-foreground truncate flex-1">
+                    <span className="text-muted-foreground font-normal">{project.ownerUsername || 'user'}/</span>
+                    {project.name}
+                  </span>
+                </div>
+              ))
             )}
           </div>
         </div>
 
+        {/* Main Content Area - Placeholder */}
+        <div className="flex-1 flex items-center justify-center p-6 lg:p-8 order-2 w-full bg-background">
+          <Label className="text-muted-foreground">
+            Something better is coming here
+          </Label>
+        </div>
+
         {/* Activity Feed Sidebar */}
-        <div className="w-full lg:w-[300px] xl:w-[320px] shrink-0 p-6 lg:pl-0 lg:py-8 lg:pr-8 order-2">
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="w-full lg:w-[350px] xl:w-[450px] shrink-0 p-4 order-3 flex flex-col">
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden max-w-[300px]">
             <div className="px-4 py-3 border-b border-border bg-muted/10">
               <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Recent Activity</h2>
             </div>
@@ -147,7 +156,7 @@ const Dashboard = () => {
                 <div className="relative pl-6 space-y-5 pb-4 pt-3">
                   {/* Vertical Line */}
                   <div className="absolute top-5 bottom-6 left-[15px] w-[2px] bg-border/60" />
-                  
+
                   {dashboardActivity?.slice(0, 6).map((activity) => (
                     <div key={activity.id} className="relative flex items-start gap-3 z-10 group">
                       {/* Timeline Dot/Icon */}

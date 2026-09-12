@@ -30,10 +30,10 @@ const ProjectMembers = ({ projectId }) => {
           <div className="text-sm text-muted-foreground">Loading members...</div>
         ) : (
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-5 gap-2.5">
               {projectMembers.slice(0, 10).map(member => (
                 <div key={member.id} className="flex flex-col items-center gap-1" title={`${member.user.username} (${member.role})`}>
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold uppercase text-primary border border-primary/20">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold uppercase text-primary border border-primary/20">
                     {member.user.username.substring(0, 2)}
                   </div>
                   <span className="text-[10px] text-muted-foreground truncate w-full text-center">
