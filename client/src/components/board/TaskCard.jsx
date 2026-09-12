@@ -106,12 +106,14 @@ const TaskEditModal = ({ task, onClose }) => {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-border shrink-0 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Edit Task</h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors"
+            className="text-muted-foreground hover:text-foreground"
           >
-            ✕
-          </button>
+            <Cancel01Icon size={16} />
+          </Button>
         </div>
 
         {/* Content */}
@@ -166,7 +168,7 @@ const TaskEditModal = ({ task, onClose }) => {
             <p className="text-xs text-muted-foreground">Up to 10 tags · press Enter or Tab to add</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {/* Assignee */}
             <div className="space-y-2 flex flex-col">
               <Label>Assignee</Label>
@@ -231,37 +233,6 @@ const TaskEditModal = ({ task, onClose }) => {
               </Popover>
             </div>
 
-            {/* Due Date */}
-            <div className="space-y-2 flex flex-col">
-              <Label>Due Date</Label>
-              <Popover open={openDate} onOpenChange={setOpenDate}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dueDate && "text-muted-foreground"
-                    )}
-                    disabled={isSubmitting}
-                  >
-                    <Calendar01Icon className="mr-2 h-4 w-4" />
-                    {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={(date) => {
-                      setDueDate(date);
-                      setOpenDate(false);
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Priority */}
             <div className="space-y-2 flex flex-col">
               <Label>Priority</Label>
@@ -289,6 +260,37 @@ const TaskEditModal = ({ task, onClose }) => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+          </div>
+
+          {/* Due Date — own row, sized to content */}
+          <div className="space-y-2 flex flex-col w-fit">
+            <Label>Due Date</Label>
+            <Popover open={openDate} onOpenChange={setOpenDate}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    !dueDate && "text-muted-foreground"
+                  )}
+                  disabled={isSubmitting}
+                >
+                  <Calendar01Icon className="mr-2 h-4 w-4" />
+                  {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={(date) => {
+                    setDueDate(date);
+                    setOpenDate(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -361,12 +363,15 @@ const TaskCard = memo(({ task }) => {
           {isOwner && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 shrink-0 transition-all rounded-lg hover:bg-muted"
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 shrink-0 transition-all rounded-lg hover:bg-muted cursor-pointer"
                   onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }}
                 >
                   <MoreVerticalIcon size={14} />
-                </button>
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem

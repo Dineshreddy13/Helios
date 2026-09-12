@@ -7,6 +7,7 @@ import {
     projectMembers,
     projects,
     tasks,
+    users,
 } from "#models/index.js";
 import { logActivity } from "../../activity/services/activity.service.js";
 import { ApiError } from "#utils/ApiError.js";
@@ -46,6 +47,7 @@ export const createProject = async (userId, { name, description, includeReadme }
     });
 
     await invalidateMembershipCache(project.id, userId);
+    await delCache(`projects:user:v2:${userId}`);
     await delCache(`projects:user:${userId}`);
 
     return { project, message: PROJECT_MSG.CREATED };
@@ -53,7 +55,7 @@ export const createProject = async (userId, { name, description, includeReadme }
 
 // ── getProjectsForUser ─────────────────────────────────────────────────────
 export const getProjectsForUser = async (userId) => {
-    const cacheKey = `projects:user:${userId}`;
+    const cacheKey = `projects:user:v2:${userId}`;
     const cached = await getCache(cacheKey);
     if (cached) {
         return { projects: cached };
@@ -65,12 +67,14 @@ export const getProjectsForUser = async (userId) => {
             name: projects.name,
             description: projects.description,
             ownerId: projects.ownerId,
+            ownerUsername: users.username,
             createdAt: projects.createdAt,
             updatedAt: projects.updatedAt,
             role: projectMembers.role,
         })
         .from(projects)
         .innerJoin(projectMembers, eq(projectMembers.projectId, projects.id))
+        .innerJoin(users, eq(users.id, projects.ownerId))
         .where(eq(projectMembers.userId, userId))
         .orderBy(desc(projects.updatedAt));
 
@@ -117,6 +121,7 @@ export const deleteProject = async (projectId, userId) => {
     await db.delete(projects).where(eq(projects.id, projectId));
     
     for (const member of members) {
+        await delCache(`projects:user:v2:${member.userId}`);
         await delCache(`projects:user:${member.userId}`);
         await invalidateMembershipCache(projectId, member.userId);
     }
